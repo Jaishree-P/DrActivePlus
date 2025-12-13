@@ -80,17 +80,25 @@ export default function PatientsTable() {
     const doc = new jsPDF();
     const docWidth = doc.internal.pageSize.getWidth();
     
-    // --- Logo ---
+    // --- Logo & Header ---
     const logoBase64 = await fetchImageAsBase64('/logo.png');
-    if (logoBase64) {
-        doc.addImage(logoBase64, 'PNG', 14, 15, 20, 20);
-    }
-    
-    // --- Header ---
     doc.setFontSize(22);
     doc.setTextColor(217, 4, 41); // Red color for main title
     doc.setFont("helvetica", "bold");
-    doc.text("DOCTOR ACTIVE PLUS", docWidth / 2, 22, { align: "center" });
+
+    const clinicTitle = "DOCTOR ACTIVE PLUS";
+    const titleWidth = doc.getTextWidth(clinicTitle);
+    const logoWidth = 20;
+    const logoGap = 4;
+    const totalHeaderWidth = logoWidth + logoGap + titleWidth;
+    const headerStartX = (docWidth - totalHeaderWidth) / 2;
+    
+    if (logoBase64) {
+        doc.addImage(logoBase64, 'PNG', headerStartX, 15, logoWidth, 20);
+    }
+    
+    doc.text(clinicTitle, headerStartX + logoWidth + logoGap, 22);
+
 
     doc.setFontSize(10);
     doc.setTextColor(0, 0, 0); // Black color
