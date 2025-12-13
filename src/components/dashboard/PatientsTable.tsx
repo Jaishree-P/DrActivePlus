@@ -40,6 +40,23 @@ import { type Patient, type DoctorProfile } from "@/lib/types";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
+async function fetchImageAsBase64(url: string) {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error("Error fetching image as base64:", error);
+    return ""; // Return empty string or a placeholder if fetch fails
+  }
+}
+
+
 export default function PatientsTable() {
   const router = useRouter();
   const { toast } = useToast();
@@ -59,45 +76,51 @@ export default function PatientsTable() {
     });
   };
 
-  const handleDownloadBill = (patient: Patient) => {
+  const handleDownloadBill = async (patient: Patient) => {
     const doc = new jsPDF();
     const docWidth = doc.internal.pageSize.getWidth();
-
+    
+    // --- Logo ---
+    const logoBase64 = await fetchImageAsBase64('/logo.png');
+    if (logoBase64) {
+        doc.addImage(logoBase64, 'PNG', 14, 15, 20, 20);
+    }
+    
     // --- Header ---
+    const headerX = 40;
     doc.setFontSize(22);
     doc.setTextColor(217, 4, 41); // Red color for main title
     doc.setFont("helvetica", "bold");
-    doc.text("DOCTOR ACTIVE PLUS", docWidth / 2, 22, { align: "center" });
+    doc.text("DOCTOR ACTIVE PLUS", headerX, 22);
 
     doc.setFontSize(10);
     doc.setTextColor(0, 0, 0); // Black color
     doc.setFont("helvetica", "normal");
-    doc.text("Advance Spine | Joint & Laser Center", docWidth / 2, 29, { align: "center" });
-    
-    doc.setDrawColor(217, 4, 41); // Red line
+    doc.text("Advance Spine | Joint & Laser Center", headerX, 29);
+
+    const addressLines = doc.splitTextToSize(contactInfo.address, docWidth - headerX - 14);
+    doc.text(addressLines, headerX, 35);
+    let currentY = 35 + (addressLines.length * 5);
+
+
+    // --- Red Lines & GSTIN ---
+    doc.setDrawColor(217, 4, 41);
     doc.setLineWidth(0.5);
-    doc.line(14, 35, docWidth - 14, 35);
+    doc.line(14, currentY + 2, docWidth - 14, currentY + 2);
     
-    let currentY = 42;
-    doc.setFontSize(9);
-    const addressLines = doc.splitTextToSize(contactInfo.address, 80);
-    doc.text(addressLines, docWidth / 2, currentY, { align: "center" });
-    currentY += addressLines.length * 4;
+    doc.setFontSize(8);
+    doc.setTextColor(100);
+    doc.text("A unit of Speed Plus Health Initiatives | GSTIN: 29AOTPY4559F1ZX", docWidth / 2, currentY + 6, { align: "center" });
 
-    doc.text(`Mobile: ${contactInfo.phone} | Email: ${contactInfo.email}`, docWidth / 2, currentY, { align: "center" });
-    currentY += 8;
-
-    doc.setDrawColor(150, 150, 150); // Gray line
-    doc.setLineWidth(0.2);
-    doc.line(14, currentY, docWidth - 14, currentY);
-    currentY += 10;
+    doc.line(14, currentY + 9, docWidth - 14, currentY + 9);
+    currentY += 15;
 
 
     // --- Patient Details ---
     const patientDetails = [
         { title: "Patient Name:", value: patient.name },
         { title: "Mobile:", value: patient.phone },
-        { title: "Consultant Physio:", value: doctorProfile.name },
+        { title: "Consultant Physio:", patient.consultantPhysio },
         { title: "Diagnosis:", value: patient.diagnosis },
         { title: "Treatment:", value: patient.treatmentPlan },
     ];
@@ -111,16 +134,21 @@ export default function PatientsTable() {
         const valueXPos = 55;
         const valueLines = doc.splitTextToSize(detail.value, docWidth - valueXPos - 14);
         doc.text(valueLines, valueXPos, yPos);
-        yPos += (valueLines.length * 5) + 2;
+        yPos += (valueLines.length * 4) + 2;
     });
 
-    const sessionTableY = currentY;
+    const sessionTableY = yPos > currentY + 20 ? yPos + 5 : currentY + 20;
+
+    // Sort sessions and payments
+    const sortedSessions = patient.sessions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const sortedPayments = patient.payments.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
     // --- Session Dates Table ---
-    if (patient.sessions && patient.sessions.length > 0) {
+    if (sortedSessions && sortedSessions.length > 0) {
         autoTable(doc, {
             startY: sessionTableY,
             head: [['#', 'Session Date']],
-            body: patient.sessions.map((session, index) => [
+            body: sortedSessions.map((session, index) => [
                 index + 1,
                 format(new Date(session.date), "dd MMM yyyy")
             ]),
@@ -139,51 +167,57 @@ export default function PatientsTable() {
     }
 
     let finalY = (doc as any).lastAutoTable.finalY || yPos;
+    
+    finalY += 10;
 
     // --- Payment Table ---
-    const paidSessions = patient.sessions.filter(s => s.paid);
-    const totalPaid = paidSessions.reduce((sum, s) => sum + s.amount, 0);
+    autoTable(doc, {
+      startY: finalY,
+      head: [['#', 'Payment Date', 'Amount Paid']],
+      body: sortedPayments.map((payment, index) => [
+        index + 1,
+        format(new Date(payment.date), "dd MMM yyyy"),
+        `₹ ${payment.amount.toFixed(2)}`
+      ]),
+      theme: 'grid',
+      headStyles: {
+        fillColor: "#d90429", // Red
+        textColor: 255,
+        fontStyle: 'bold',
+      },
+      columnStyles: {
+        0: { cellWidth: 10 },
+        2: { halign: 'right' }
+      },
+      margin: { left: 14, right: 14 },
+    });
+    finalY = (doc as any).lastAutoTable.finalY;
 
-    if (paidSessions.length > 0) {
-        finalY += 15;
-        autoTable(doc, {
-            startY: finalY,
-            head: [['#', 'Payment Date', 'Amount Paid']],
-            body: paidSessions.map((session, index) => [
-                index + 1,
-                format(new Date(session.date), "dd MMM yyyy"),
-                `Rs. ${session.amount.toFixed(2)}`
-            ]),
-            theme: 'grid',
-            headStyles: {
-                fillColor: "#d90429", // Red
-                textColor: 255,
-                fontStyle: 'bold',
-            },
-            columnStyles: {
-                0: { cellWidth: 10 },
-                2: { halign: 'right' }
-            },
-            didDrawPage: (data) => {
-                // Total
-                const tableBottomY = data.cursor?.y ?? finalY;
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'bold');
-                doc.text('Total Paid:', data.settings.margin.left ?? 14, tableBottomY + 8);
-                doc.text(`Rs. ${totalPaid.toFixed(2)}`, docWidth - (data.settings.margin.right ?? 14), tableBottomY + 8, { align: 'right' });
-            },
-            margin: { left: 14, right: 14 },
-        });
-        finalY = (doc as any).lastAutoTable.finalY;
-    }
+    // --- Totals ---
+    finalY += 10;
+    const totalPaid = patient.payments.reduce((sum, p) => sum + p.amount, 0);
+    const balanceDue = patient.totalBill - totalPaid;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Total Bill:', 14, finalY);
+    doc.text(`₹ ${patient.totalBill.toFixed(2)}`, docWidth - 14, finalY, { align: 'right' });
+
+    finalY += 7;
+    doc.text('Total Paid:', 14, finalY);
+    doc.text(`₹ ${totalPaid.toFixed(2)}`, docWidth - 14, finalY, { align: 'right' });
     
-    // --- Balance Due ---
-    finalY += 18;
+    finalY += 7;
+    doc.setDrawColor(150, 150, 150);
+    doc.setLineWidth(0.2);
+    doc.line(14, finalY, docWidth - 14, finalY);
+    finalY += 7;
+    
     doc.setFontSize(12);
     doc.setTextColor("#d90429");
-    doc.setFont("helvetica", "bold");
     doc.text("Balance Due:", 14, finalY);
-    doc.text("Rs. 0.00", 55, finalY);
+    doc.text(`₹ ${balanceDue.toFixed(2)}`, docWidth - 14, finalY, { align: 'right' });
+
 
     doc.save(`invoice-${patient.name.replace(/\s/g, '-')}-${patient.id}.pdf`);
   };

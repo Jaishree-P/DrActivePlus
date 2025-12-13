@@ -74,6 +74,14 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
   
   const [sessionDate, setSessionDate] = useState<Date | undefined>(new Date());
   
+  const sortedSessions = useMemo(() => {
+    return patient?.sessions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) || [];
+  }, [patient?.sessions]);
+
+  const sortedPayments = useMemo(() => {
+    return patient?.payments?.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) || [];
+  }, [patient?.payments]);
+  
   const totalPaid = useMemo(() => {
     return patient?.payments?.reduce((acc, payment) => acc + payment.amount, 0) || 0;
   }, [patient?.payments]);
@@ -339,8 +347,8 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {patient.sessions.length > 0 ? (
-                                    patient.sessions.map((session, index) => (
+                                {sortedSessions.length > 0 ? (
+                                    sortedSessions.map((session, index) => (
                                         <TableRow key={session.id}>
                                             <TableCell>{index + 1}</TableCell>
                                             <TableCell>{format(new Date(session.date), "MMMM do, yyyy")}</TableCell>
@@ -429,8 +437,8 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {patient.payments && patient.payments.length > 0 ? (
-                                    patient.payments.map((payment, index) => (
+                                {sortedPayments && sortedPayments.length > 0 ? (
+                                    sortedPayments.map((payment, index) => (
                                         <TableRow key={payment.id}>
                                             <TableCell>{index + 1}</TableCell>
                                             <TableCell>{format(new Date(payment.date), "PPP")}</TableCell>
