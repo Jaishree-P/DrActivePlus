@@ -1,3 +1,64 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-background",
+      "description": "A physiotherapy session with laser therapy equipment.",
+      "imageUrl": "https://images.unsplash.com/photo-1570174006382-148305ce4972?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxwaHlzaW90aGVyYXB5JTIwc2Vzc2lvbnxlbnwwfHx8fDE3NjU2MjY4MDJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "physiotherapy session"
+    },
+    {
+      "id": "doctor-photo",
+      "description": "Portrait of Dr. Anil Kumar.",
+      "imageUrl": "https://images.unsplash.com/photo-1550831107-1553da8c8464?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxkb2N0b3IlMjBwb3J0cmFpdHxlbnwwfHx8fDE3NjU1ODMwOTZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "doctor portrait"
+    },
+    {
+      "id": "testimonial-1",
+      "description": "Avatar of a patient.",
+      "imageUrl": "https://images.unsplash.com/photo-1654823520592-ac35df78f018?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxwYXRpZW50JTIwcG9ydHJhaXR8ZW58MHx8fHwxNzY1NjI2ODAzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "patient portrait"
+    },
+    {
+      "id": "testimonial-2",
+      "description": "Avatar of a patient.",
+      "imageUrl": "https://images.unsplash.com/photo-1757353242751-f66c5623c832?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxwYXRpZW50JTIwcG9ydHJhaXR8ZW58MHx8fHwxNzY1NjI2ODAzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "patient portrait"
+    },
+    {
+      "id": "testimonial-3",
+      "description": "Avatar of a patient.",
+      "imageUrl": "https://images.unsplash.com/photo-1454418747937-bd95bb945625?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxwYXRpZW50JTIwcG9ydHJhaXR8ZW58MHx8fHwxNzY1NjI2ODAzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "patient portrait"
+    },
+    {
+      "id": "blog-1",
+      "description": "Image for a blog post about wellness.",
+      "imageUrl": "https://images.unsplash.com/photo-1543604055-dede4512686d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHx3ZWxsbmVzcyUyMGFydGljbGV8ZW58MHx8fHwxNzY1NjI2ODAyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "wellness article"
+    },
+    {
+      "id": "blog-2",
+      "description": "Image for a blog post about physiotherapy.",
+      "imageUrl": "https://images.unsplash.com/photo-1581090465357-c8a1f71f0407?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxwaHlzaW90aGVyYXB5JTIwZXhlcmNpc2V8ZW58MHx8fHwxNzY1NjI0OTQ3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "physiotherapy exercise"
+    },
+    {
+      "id": "blog-3",
+      "description": "Image for a blog post about health.",
+      "imageUrl": "https://images.unsplash.com/photo-1607962837359-5e7e89f86776?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxoZWFsdGh5JTIwbGlmZXN0eWxlfGVufDB8fHx8MTc2NTYyMTE3MXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "healthy lifestyle"
+    },
+    {
+      "id": "clinic-logo-dark",
+      "description": "Logo for Doctor Active Plus for dark backgrounds",
+      "imageUrl": "https://images.unsplash.com/photo-1643729041862-bf411535a4d7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxjbGluaWMlMjBsb2dvfGVufDB8fHx8MTc2NTYyNjgwMnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "clinic logo"
+    },
+    {
+      "id": "clinic-logo-light",
+      "description": "Logo for Doctor Active Plus for light backgrounds",
+      "imageUrl": "https://images.unsplash.com/photo-1758567056386-768c303d19b8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxjbGluaWMlMjBsb2dvfGVufDB8fHx8MTc2NTYyNjgwMnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "clinic logo"
+    }
+  ]
 }
