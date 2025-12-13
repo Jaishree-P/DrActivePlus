@@ -26,7 +26,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const HARDCODED_PASSCODE = "123456";
+const HARDCODED_PASSCODE = "987654";
 
 export default function LoginPage() {
   const router = useRouter();
