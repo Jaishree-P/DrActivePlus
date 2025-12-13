@@ -65,31 +65,33 @@ export default function PatientsTable() {
 
     // --- Header ---
     doc.setFontSize(22);
-    doc.setTextColor("#d90429");
+    doc.setTextColor(217, 4, 41); // Red color for main title
     doc.setFont("helvetica", "bold");
-    doc.text("DOCTOR ACTIVE PLUS", docWidth / 2, 20, { align: "center" });
+    doc.text("DOCTOR ACTIVE PLUS", docWidth / 2, 22, { align: "center" });
 
     doc.setFontSize(10);
-    doc.setTextColor("#000000");
+    doc.setTextColor(0, 0, 0); // Black color
     doc.setFont("helvetica", "normal");
-    doc.text("Advance Spine | Joint & Laser Center", docWidth / 2, 27, { align: "center" });
-
-    doc.setDrawColor("#d90429");
-    doc.setLineWidth(0.5);
-    doc.line(14, 32, docWidth - 14, 32);
-
-    doc.setFontSize(8);
-    const addressLines = doc.splitTextToSize(contactInfo.address, 80);
-    doc.text(addressLines, docWidth / 2, 40, { align: "center" });
+    doc.text("Advance Spine | Joint & Laser Center", docWidth / 2, 29, { align: "center" });
     
-    let currentY = 40 + (addressLines.length * 4);
+    doc.setDrawColor(217, 4, 41); // Red line
+    doc.setLineWidth(0.5);
+    doc.line(14, 35, docWidth - 14, 35);
+    
+    let currentY = 42;
+    doc.setFontSize(9);
+    const addressLines = doc.splitTextToSize(contactInfo.address, 80);
+    doc.text(addressLines, docWidth / 2, currentY, { align: "center" });
+    currentY += addressLines.length * 4;
 
     doc.text(`Mobile: ${contactInfo.phone} | Email: ${contactInfo.email}`, docWidth / 2, currentY, { align: "center" });
-    currentY += 5;
+    currentY += 8;
 
+    doc.setDrawColor(150, 150, 150); // Gray line
     doc.setLineWidth(0.2);
     doc.line(14, currentY, docWidth - 14, currentY);
-    currentY += 5;
+    currentY += 10;
+
 
     // --- Patient Details ---
     const patientDetails = [
@@ -101,13 +103,15 @@ export default function PatientsTable() {
     ];
     
     let yPos = currentY;
+    doc.setFontSize(10);
     patientDetails.forEach(detail => {
         doc.setFont("helvetica", "bold");
         doc.text(detail.title, 14, yPos);
         doc.setFont("helvetica", "normal");
-        const valueLines = doc.splitTextToSize(detail.value, 100);
-        doc.text(valueLines, 55, yPos);
-        yPos += (valueLines.length * 4) + 4;
+        const valueXPos = 55;
+        const valueLines = doc.splitTextToSize(detail.value, docWidth - valueXPos - 14);
+        doc.text(valueLines, valueXPos, yPos);
+        yPos += (valueLines.length * 5) + 2;
     });
 
     const sessionTableY = currentY;
@@ -122,7 +126,7 @@ export default function PatientsTable() {
             ]),
             theme: 'grid',
             headStyles: {
-                fillColor: "#16a085",
+                fillColor: "#d90429", // Red
                 textColor: 255,
                 fontStyle: 'bold',
             },
@@ -152,7 +156,7 @@ export default function PatientsTable() {
             ]),
             theme: 'grid',
             headStyles: {
-                fillColor: "#16a085",
+                fillColor: "#d90429", // Red
                 textColor: 255,
                 fontStyle: 'bold',
             },
@@ -176,7 +180,7 @@ export default function PatientsTable() {
     // --- Balance Due ---
     finalY += 18;
     doc.setFontSize(12);
-    doc.setTextColor("#16a085");
+    doc.setTextColor("#d90429");
     doc.setFont("helvetica", "bold");
     doc.text("Balance Due:", 14, finalY);
     doc.text("Rs. 0.00", 55, finalY);
