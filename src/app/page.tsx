@@ -5,11 +5,15 @@ import About from "@/components/sections/About";
 import BlogPreview from "@/components/sections/BlogPreview";
 import Testimonials from "@/components/sections/Testimonials";
 import Cta from "@/components/sections/Cta";
+import Stats from "@/components/sections/Stats";
 
 export default function Home() {
   return (
     <>
       <Hero />
+      <div className="animate-fade-in-up animation-delay-200">
+        <Stats />
+      </div>
       <div className="animate-fade-in-up animation-delay-200">
         <Treatments />
       </div>

@@ -13,37 +13,35 @@ export default function Hero() {
   if (!heroImage) return null;
 
   return (
-    <section className="relative w-full h-screen">
-        <Image
-          src={heroImage.imageUrl}
-          alt={heroImage.description}
-          fill
-          className="object-cover object-center"
-          priority
-          data-ai-hint={heroImage.imageHint}
-        />
-        <div className="absolute inset-0 bg-black/60" />
-        <div className="relative z-10 flex h-full flex-col items-center justify-center p-4">
-          <div className="container mx-auto flex flex-col h-full justify-center text-center text-white">
-            <div className="flex-grow flex flex-col justify-center items-center">
-              <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-                Advance Spine | Joint & Laser Center
-              </h1>
-              <p className="mt-6 max-w-3xl mx-auto text-lg text-gray-200 md:text-xl">
-                Experience expert physiotherapy care with state-of-the-art technology. We are dedicated to your recovery and well-being.
-              </p>
-              <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <WhatsAppButton size="lg" />
-                <Button variant="secondary" size="lg" asChild>
-                  <Link href="/treatments/laser-therapy">Our Services</Link>
-                </Button>
-              </div>
-            </div>
-            <div className="pb-8 md:pb-12 w-full">
-              <Stats />
+    <section className="bg-secondary">
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center py-16 md:py-24">
+          <div className="text-center md:text-left">
+            <h1 className="text-4xl font-extrabold tracking-tight text-primary sm:text-5xl md:text-6xl">
+              Advance Spine | Joint & Laser Center
+            </h1>
+            <p className="mt-6 max-w-3xl mx-auto md:mx-0 text-lg text-muted-foreground md:text-xl">
+              Experience expert physiotherapy care with state-of-the-art technology. We are dedicated to your recovery and well-being.
+            </p>
+            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4">
+              <WhatsAppButton size="lg" />
+              <Button variant="outline" size="lg" asChild>
+                <Link href="/treatments/laser-therapy">Our Services</Link>
+              </Button>
             </div>
           </div>
+          <div className="relative w-full h-80 md:h-full rounded-lg overflow-hidden shadow-2xl">
+             <Image
+                src={heroImage.imageUrl}
+                alt={heroImage.description}
+                fill
+                className="object-cover object-center"
+                priority
+                data-ai-hint={heroImage.imageHint}
+              />
+          </div>
         </div>
+      </div>
     </section>
   );
 }
