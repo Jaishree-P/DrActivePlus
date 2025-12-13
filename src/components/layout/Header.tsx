@@ -44,12 +44,12 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="bg-secondary text-secondary-foreground">
         <div className="container flex h-10 max-w-7xl items-center justify-center md:justify-between text-xs">
-           <div className="flex items-center gap-4">
+           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center">
              <a href={`tel:${contactInfo.phone.replace(/\s/g, "")}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
                 <Phone className="w-3.5 h-3.5" />
                 <span>{contactInfo.phone}</span>
               </a>
-              <div className="hidden md:flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5" />
                 <span>Bommanahalli, Bengaluru</span>
               </div>
