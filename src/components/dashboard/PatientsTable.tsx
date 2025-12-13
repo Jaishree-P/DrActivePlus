@@ -87,19 +87,18 @@ export default function PatientsTable() {
     }
     
     // --- Header ---
-    const headerX = 40;
     doc.setFontSize(22);
     doc.setTextColor(217, 4, 41); // Red color for main title
     doc.setFont("helvetica", "bold");
-    doc.text("DOCTOR ACTIVE PLUS", headerX, 22);
+    doc.text("DOCTOR ACTIVE PLUS", docWidth / 2, 22, { align: "center" });
 
     doc.setFontSize(10);
     doc.setTextColor(0, 0, 0); // Black color
     doc.setFont("helvetica", "normal");
-    doc.text("Advance Spine | Joint & Laser Center", headerX, 29);
+    doc.text("Advance Spine | Joint & Laser Center", docWidth / 2, 29, { align: "center" });
 
-    const addressLines = doc.splitTextToSize(contactInfo.address, docWidth - headerX - 14);
-    doc.text(addressLines, headerX, 35);
+    const addressLines = doc.splitTextToSize(contactInfo.address, docWidth - 40);
+    doc.text(addressLines, docWidth / 2, 35, { align: "center" });
     let currentY = 35 + (addressLines.length * 5);
 
 
@@ -313,5 +312,3 @@ export default function PatientsTable() {
     </>
   );
 }
-
-    
