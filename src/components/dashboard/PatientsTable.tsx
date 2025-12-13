@@ -120,7 +120,7 @@ export default function PatientsTable() {
     const patientDetails = [
         { title: "Patient Name:", value: patient.name },
         { title: "Mobile:", value: patient.phone },
-        { title: "Consultant Physio:", patient.consultantPhysio },
+        { title: "Consultant Physio:", value: patient.consultantPhysio },
         { title: "Diagnosis:", value: patient.diagnosis },
         { title: "Treatment:", value: patient.treatmentPlan },
     ];
