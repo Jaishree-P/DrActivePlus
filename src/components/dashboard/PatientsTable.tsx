@@ -35,7 +35,7 @@ import { MoreHorizontal, Download, Edit, Trash, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import { defaultDoctorProfile, defaultPatients } from "@/lib/data";
+import { defaultDoctorProfile, defaultPatients, contactInfo } from "@/lib/data";
 import { type Patient, type DoctorProfile } from "@/lib/types";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -67,36 +67,29 @@ export default function PatientsTable() {
     doc.setFontSize(22);
     doc.setTextColor("#d90429");
     doc.setFont("helvetica", "bold");
-    doc.text("Dr. Movement Rẋ", docWidth / 2, 20, { align: "center" });
-    
+    doc.text("DOCTOR ACTIVE PLUS", docWidth / 2, 20, { align: "center" });
+
     doc.setFontSize(10);
-    doc.setTextColor("#0077b6");
-    doc.setFont("helvetica", "bold");
-    doc.text("HEALTHCARE", docWidth / 2, 27, { align: "center" });
-    
-    doc.setFontSize(10);
-    doc.setTextColor(0, 0, 0);
+    doc.setTextColor("#000000");
     doc.setFont("helvetica", "normal");
-    doc.text("PHYSIOTHERAPY & PAIN CLINIC", docWidth / 2, 32, { align: "center" });
+    doc.text("Advance Spine | Joint & Laser Center", docWidth / 2, 27, { align: "center" });
 
-    doc.setDrawColor("#0077b6");
-    doc.line(docWidth / 2 - 20, 34, docWidth / 2 + 20, 34);
-    
-    doc.setFontSize(8);
-    const addressLines = doc.splitTextToSize(doctorProfile.bio, 100);
-    doc.text(addressLines, docWidth / 2, 40, { align: "center" });
-
-    doc.text(`Mobile: +91 92627 27272 | Email: drmovementrx@gmail.com`, docWidth / 2, 45, { align: "center" });
-    
     doc.setDrawColor("#d90429");
     doc.setLineWidth(0.5);
-    doc.line(14, 50, docWidth - 14, 50);
+    doc.line(14, 32, docWidth - 14, 32);
 
-    doc.setTextColor("#d90429");
-    doc.setFontSize(9);
-    doc.text("A unit of Speed Plus Health Initiatives | GSTIN: 29AOTPY4559F1ZX", docWidth / 2, 55, { align: "center" });
+    doc.setFontSize(8);
+    const addressLines = doc.splitTextToSize(contactInfo.address, 80);
+    doc.text(addressLines, docWidth / 2, 40, { align: "center" });
+    
+    let currentY = 40 + (addressLines.length * 4);
 
-    doc.line(14, 58, docWidth - 14, 58);
+    doc.text(`Mobile: ${contactInfo.phone} | Email: ${contactInfo.email}`, docWidth / 2, currentY, { align: "center" });
+    currentY += 5;
+
+    doc.setLineWidth(0.2);
+    doc.line(14, currentY, docWidth - 14, currentY);
+    currentY += 5;
 
     // --- Patient Details ---
     const patientDetails = [
@@ -107,7 +100,7 @@ export default function PatientsTable() {
         { title: "Treatment:", value: patient.treatmentPlan },
     ];
     
-    let yPos = 70;
+    let yPos = currentY;
     patientDetails.forEach(detail => {
         doc.setFont("helvetica", "bold");
         doc.text(detail.title, 14, yPos);
@@ -117,7 +110,7 @@ export default function PatientsTable() {
         yPos += (valueLines.length * 4) + 4;
     });
 
-    const sessionTableY = 70;
+    const sessionTableY = currentY;
     // --- Session Dates Table ---
     if (patient.sessions && patient.sessions.length > 0) {
         autoTable(doc, {
@@ -167,14 +160,21 @@ export default function PatientsTable() {
                 0: { cellWidth: 10 },
                 2: { halign: 'right' }
             },
-            margin: { left: 14 },
-            tableWidth: docWidth - 28,
+            didDrawPage: (data) => {
+                // Total
+                const tableBottomY = data.cursor?.y ?? finalY;
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Total Paid:', data.settings.margin.left ?? 14, tableBottomY + 8);
+                doc.text(`Rs. ${totalPaid.toFixed(2)}`, docWidth - (data.settings.margin.right ?? 14), tableBottomY + 8, { align: 'right' });
+            },
+            margin: { left: 14, right: 14 },
         });
         finalY = (doc as any).lastAutoTable.finalY;
     }
     
     // --- Balance Due ---
-    finalY += 10;
+    finalY += 18;
     doc.setFontSize(12);
     doc.setTextColor("#16a085");
     doc.setFont("helvetica", "bold");
