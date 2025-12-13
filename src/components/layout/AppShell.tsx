@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import FloatingWhatsAppButton from "../FloatingWhatsAppButton";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -13,7 +14,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex flex-col min-h-screen">
       {!isDashboard && !isLogin && <Header />}
       <main className="flex-grow">{children}</main>
-      {!isDashboard && !isLogin && <Footer />}
+      {!isDashboard && !isLogin && (
+        <>
+          <Footer />
+          <FloatingWhatsAppButton />
+        </>
+      )}
     </div>
   );
 }
