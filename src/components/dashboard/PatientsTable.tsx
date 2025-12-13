@@ -35,8 +35,8 @@ import { MoreHorizontal, Download, Edit, Trash, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import { defaultPatients } from "@/lib/data";
-import { type Patient } from "@/lib/types";
+import { defaultDoctorProfile, defaultPatients } from "@/lib/data";
+import { type Patient, type DoctorProfile } from "@/lib/types";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
@@ -44,6 +44,10 @@ export default function PatientsTable() {
   const router = useRouter();
   const { toast } = useToast();
   const [patients, setPatients] = useLocalStorage<Patient[]>("patients", defaultPatients);
+  const [doctorProfile] = useLocalStorage<DoctorProfile>(
+    "doctor-profile",
+    defaultDoctorProfile
+  );
   const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null);
 
   const handleDelete = (patientId: string) => {
@@ -57,28 +61,126 @@ export default function PatientsTable() {
 
   const handleDownloadBill = (patient: Patient) => {
     const doc = new jsPDF();
-    
-    doc.setFontSize(20);
-    doc.text("Invoice", 14, 22);
-    doc.setFontSize(12);
-    doc.text(`Patient: ${patient.name}`, 14, 32);
-    doc.text(`Date: ${format(new Date(), "yyyy-MM-dd")}`, 14, 38);
+    const docWidth = doc.internal.pageSize.getWidth();
 
-    autoTable(doc, {
-        startY: 50,
-        head: [['Session Date', 'Amount', 'Status']],
-        body: patient.sessions.map(session => [
-            format(new Date(session.date), "yyyy-MM-dd"), 
-            `$${session.amount.toFixed(2)}`, 
-            session.paid ? 'Paid' : 'Unpaid'
-        ]),
+    // --- Header ---
+    doc.setFontSize(22);
+    doc.setTextColor("#d90429");
+    doc.setFont("helvetica", "bold");
+    doc.text("Dr. Movement Rẋ", docWidth / 2, 20, { align: "center" });
+    
+    doc.setFontSize(10);
+    doc.setTextColor("#0077b6");
+    doc.setFont("helvetica", "bold");
+    doc.text("HEALTHCARE", docWidth / 2, 27, { align: "center" });
+    
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont("helvetica", "normal");
+    doc.text("PHYSIOTHERAPY & PAIN CLINIC", docWidth / 2, 32, { align: "center" });
+
+    doc.setDrawColor("#0077b6");
+    doc.line(docWidth / 2 - 20, 34, docWidth / 2 + 20, 34);
+    
+    doc.setFontSize(8);
+    const addressLines = doc.splitTextToSize(doctorProfile.bio, 100);
+    doc.text(addressLines, docWidth / 2, 40, { align: "center" });
+
+    doc.text(`Mobile: +91 92627 27272 | Email: drmovementrx@gmail.com`, docWidth / 2, 45, { align: "center" });
+    
+    doc.setDrawColor("#d90429");
+    doc.setLineWidth(0.5);
+    doc.line(14, 50, docWidth - 14, 50);
+
+    doc.setTextColor("#d90429");
+    doc.setFontSize(9);
+    doc.text("A unit of Speed Plus Health Initiatives | GSTIN: 29AOTPY4559F1ZX", docWidth / 2, 55, { align: "center" });
+
+    doc.line(14, 58, docWidth - 14, 58);
+
+    // --- Patient Details ---
+    const patientDetails = [
+        { title: "Patient Name:", value: patient.name },
+        { title: "Mobile:", value: patient.phone },
+        { title: "Consultant Physio:", value: doctorProfile.name },
+        { title: "Diagnosis:", value: patient.diagnosis },
+        { title: "Treatment:", value: patient.treatmentPlan },
+    ];
+    
+    let yPos = 70;
+    patientDetails.forEach(detail => {
+        doc.setFont("helvetica", "bold");
+        doc.text(detail.title, 14, yPos);
+        doc.setFont("helvetica", "normal");
+        const valueLines = doc.splitTextToSize(detail.value, 100);
+        doc.text(valueLines, 55, yPos);
+        yPos += (valueLines.length * 4) + 4;
     });
 
-    const finalY = (doc as any).lastAutoTable.finalY || 60;
-    const total = patient.sessions.reduce((sum, s) => sum + s.amount, 0);
+    const sessionTableY = 70;
+    // --- Session Dates Table ---
+    if (patient.sessions && patient.sessions.length > 0) {
+        autoTable(doc, {
+            startY: sessionTableY,
+            head: [['#', 'Session Date']],
+            body: patient.sessions.map((session, index) => [
+                index + 1,
+                format(new Date(session.date), "dd MMM yyyy")
+            ]),
+            theme: 'grid',
+            headStyles: {
+                fillColor: "#16a085",
+                textColor: 255,
+                fontStyle: 'bold',
+            },
+            columnStyles: {
+                0: { cellWidth: 10 },
+            },
+            margin: { left: 130 },
+            tableWidth: docWidth - 144,
+        });
+    }
 
-    doc.setFontSize(14);
-    doc.text(`Total: $${total.toFixed(2)}`, 14, finalY + 10);
+    let finalY = (doc as any).lastAutoTable.finalY || yPos;
+
+    // --- Payment Table ---
+    const paidSessions = patient.sessions.filter(s => s.paid);
+    const totalPaid = paidSessions.reduce((sum, s) => sum + s.amount, 0);
+
+    if (paidSessions.length > 0) {
+        finalY += 15;
+        autoTable(doc, {
+            startY: finalY,
+            head: [['#', 'Payment Date', 'Amount Paid']],
+            body: paidSessions.map((session, index) => [
+                index + 1,
+                format(new Date(session.date), "dd MMM yyyy"),
+                `Rs. ${session.amount.toFixed(2)}`
+            ]),
+            theme: 'grid',
+            headStyles: {
+                fillColor: "#16a085",
+                textColor: 255,
+                fontStyle: 'bold',
+            },
+            columnStyles: {
+                0: { cellWidth: 10 },
+                2: { halign: 'right' }
+            },
+            margin: { left: 14 },
+            tableWidth: docWidth - 28,
+        });
+        finalY = (doc as any).lastAutoTable.finalY;
+    }
+    
+    // --- Balance Due ---
+    finalY += 10;
+    doc.setFontSize(12);
+    doc.setTextColor("#16a085");
+    doc.setFont("helvetica", "bold");
+    doc.text("Balance Due:", 14, finalY);
+    doc.text("Rs. 0.00", 55, finalY);
+
     doc.save(`invoice-${patient.name.replace(/\s/g, '-')}-${patient.id}.pdf`);
   };
 
