@@ -1,5 +1,4 @@
 import Hero from "@/components/sections/Hero";
-import Stats from "@/components/sections/Stats";
 import Treatments from "@/components/sections/Treatments";
 import MissionVision from "@/components/sections/MissionVision";
 import About from "@/components/sections/About";
@@ -11,13 +10,24 @@ export default function Home() {
   return (
     <>
       <Hero />
-      <Stats />
-      <Treatments />
-      <MissionVision />
-      <About />
-      <BlogPreview />
-      <Testimonials />
-      <Cta />
+      <div className="animate-fade-in-up animation-delay-200">
+        <Treatments />
+      </div>
+      <div className="animate-fade-in-up animation-delay-400">
+        <MissionVision />
+      </div>
+      <div className="animate-fade-in-up animation-delay-600">
+        <About />
+      </div>
+      <div className="animate-fade-in-up animation-delay-800">
+        <BlogPreview />
+      </div>
+      <div className="animate-fade-in-up animation-delay-1000">
+        <Testimonials />
+      </div>
+      <div className="animate-fade-in-up animation-delay-1200">
+        <Cta />
+      </div>
     </>
   );
 }
