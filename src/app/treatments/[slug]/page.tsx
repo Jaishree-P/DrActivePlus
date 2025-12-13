@@ -2,6 +2,8 @@ import { treatments } from "@/lib/data";
 import { notFound } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check } from "lucide-react";
+import ScrollAnimation from "@/components/ScrollAnimation";
+
 
 type TreatmentPageProps = {
   params: {
@@ -39,7 +41,7 @@ export default function TreatmentPage({ params }: TreatmentPageProps) {
   return (
     <div className="bg-background">
       <div className="container mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="text-center mb-12 animate-fade-in-up">
+        <ScrollAnimation className="text-center mb-12">
           <div className="flex justify-center mb-4">
               <treatment.icon className="w-16 h-16 text-primary" />
           </div>
@@ -49,18 +51,18 @@ export default function TreatmentPage({ params }: TreatmentPageProps) {
           <p className="mt-4 max-w-2xl mx-auto text-xl text-muted-foreground">
             {treatment.description}
           </p>
-        </div>
+        </ScrollAnimation>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {treatment.subTreatments.map((sub, index) => (
-                <div key={index} className="animate-fade-in-up" style={{ animationDelay: `${200 + index * 100}ms` }}>
+                <ScrollAnimation key={index} delay={100 + index * 50}>
                     <Card className="bg-secondary h-full">
                         <CardContent className="p-6 flex items-center gap-4">
                             <Check className="w-6 h-6 text-primary flex-shrink-0" />
                             <h3 className="font-medium text-secondary-foreground">{sub}</h3>
                         </CardContent>
                     </Card>
-                </div>
+                </ScrollAnimation>
             ))}
         </div>
       </div>

@@ -6,32 +6,33 @@ import BlogPreview from "@/components/sections/BlogPreview";
 import Testimonials from "@/components/sections/Testimonials";
 import Cta from "@/components/sections/Cta";
 import Stats from "@/components/sections/Stats";
+import ScrollAnimation from "@/components/ScrollAnimation";
 
 export default function Home() {
   return (
     <>
       <Hero />
-      <div className="animate-fade-in-up animation-delay-200">
+      <ScrollAnimation>
         <Stats />
-      </div>
-      <div className="animate-fade-in-up animation-delay-200">
+      </ScrollAnimation>
+      <ScrollAnimation delay={200}>
         <Treatments />
-      </div>
-      <div className="animate-fade-in-up animation-delay-400">
+      </ScrollAnimation>
+      <ScrollAnimation delay={200}>
         <MissionVision />
-      </div>
-      <div className="animate-fade-in-up animation-delay-600">
+      </ScrollAnimation>
+      <ScrollAnimation delay={200}>
         <About />
-      </div>
-      <div className="animate-fade-in-up animation-delay-800">
+      </ScrollAnimation>
+      <ScrollAnimation delay={200}>
         <BlogPreview />
-      </div>
-      <div className="animate-fade-in-up animation-delay-1000">
+      </ScrollAnimation>
+      <ScrollAnimation delay={200}>
         <Testimonials />
-      </div>
-      <div className="animate-fade-in-up animation-delay-1200">
+      </ScrollAnimation>
+      <ScrollAnimation delay={200}>
         <Cta />
-      </div>
+      </ScrollAnimation>
     </>
   );
 }
