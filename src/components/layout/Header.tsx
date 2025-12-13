@@ -41,24 +41,6 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="bg-secondary/50">
-        <div className="container mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-6 gap-y-2 py-2 text-xs text-muted-foreground sm:justify-between">
-          <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 flex-shrink-0" />
-            <span className="max-w-xs sm:max-w-md md:max-w-lg text-center sm:text-left">{contactInfo.address}</span>
-          </div>
-          <div className="flex items-center gap-x-6 gap-y-2">
-            <div className="flex items-center gap-2">
-              <Phone className="h-3 w-3" />
-              <a href={`tel:${contactInfo.phone.replace(/\s/g, "")}`} className="hover:text-primary">{contactInfo.phone}</a>
-            </div>
-            <div className="flex items-center gap-2">
-              <Mail className="h-3 w-3" />
-              <a href={`mailto:${contactInfo.email}`} className="hover:text-primary">{contactInfo.email}</a>
-            </div>
-          </div>
-        </div>
-      </div>
       <div className="container flex h-16 max-w-7xl items-center justify-between">
         <Link href="/" className="mr-6 flex items-center space-x-2">
           <Logo />
