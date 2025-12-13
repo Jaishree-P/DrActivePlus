@@ -29,6 +29,7 @@ import { CalendarIcon, Trash } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { v4 as uuidv4 } from "uuid";
+import { Badge } from "@/components/ui/badge";
 
 
 const formSchema = z.object({
@@ -141,6 +142,25 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
     toast({
       title: "Session Deleted",
       description: "The session has been removed.",
+    });
+  };
+
+  const handleTogglePayment = (sessionId: string) => {
+    if (!patient) return;
+
+    const updatedSessions = patient.sessions.map(session => 
+      session.id === sessionId ? { ...session, paid: !session.paid } : session
+    );
+    const updatedPatient = { ...patient, sessions: updatedSessions };
+
+    setPatient(updatedPatient);
+    const updatedPatients = patients.map(p => p.id === patient.id ? updatedPatient : p);
+    setPatients(updatedPatients);
+    
+    const targetSession = updatedSessions.find(s => s.id === sessionId);
+    toast({
+      title: "Payment Updated",
+      description: `Session marked as ${targetSession?.paid ? "Paid" : "Unpaid"}.`,
     });
   };
 
@@ -295,6 +315,7 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
                                     <TableHead>Session Date</TableHead>
                                     <TableHead>Amount</TableHead>
                                     <TableHead>Status</TableHead>
+                                    <TableHead className="text-right">Action</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -304,14 +325,20 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
                                             <TableCell>{format(new Date(session.date), "PPP")}</TableCell>
                                             <TableCell>Rs. {session.amount.toFixed(2)}</TableCell>
                                             <TableCell>
-                                                {/* Payment status logic to be added */}
-                                                <Button variant="secondary" size="sm">Toggle Paid</Button>
+                                                <Badge variant={session.paid ? "default" : "destructive"}>
+                                                    {session.paid ? "Paid" : "Unpaid"}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <Button variant="secondary" size="sm" onClick={() => handleTogglePayment(session.id)}>
+                                                    {session.paid ? "Mark Unpaid" : "Mark Paid"}
+                                                </Button>
                                             </TableCell>
                                         </TableRow>
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={3} className="text-center h-24">
+                                        <TableCell colSpan={4} className="text-center h-24">
                                             No session history for this patient.
                                         </TableCell>
                                     </TableRow>
@@ -325,3 +352,5 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
     </div>
   );
 }
+
+    
