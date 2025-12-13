@@ -155,6 +155,7 @@ export const defaultPatients: Patient[] = [
     {
         id: '1',
         name: 'Aarav Sharma',
+        age: 34,
         email: 'aarav.sharma@example.com',
         phone: '9876543210',
         diagnosis: 'Slipped Disc',
@@ -170,6 +171,7 @@ export const defaultPatients: Patient[] = [
     {
         id: '2',
         name: 'Diya Mehta',
+        age: 28,
         email: 'diya.mehta@example.com',
         phone: '9876543211',
         diagnosis: 'ACL Tear',
@@ -184,6 +186,7 @@ export const defaultPatients: Patient[] = [
     {
         id: '3',
         name: 'Vihaan Joshi',
+        age: 45,
         email: 'vihaan.joshi@example.com',
         phone: '9876543212',
         diagnosis: 'Frozen Shoulder',

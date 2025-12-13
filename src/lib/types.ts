@@ -48,6 +48,7 @@ export type BlogPost = {
 export type Patient = {
   id: string;
   name: string;
+  age: number;
   email: string;
   phone: string;
   diagnosis: string;

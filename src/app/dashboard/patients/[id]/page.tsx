@@ -28,7 +28,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 const formSchema = z.object({
   name: z.string().min(2, "Full name is required"),
-  email: z.string().email("Invalid email address"),
+  age: z.coerce.number().min(0, "Age must be a positive number"),
+  email: z.string().email("Invalid email address").optional().or(z.literal("")),
   phone: z.string().min(10, "Phone number is required"),
   diagnosis: z.string().min(3, "Diagnosis is required"),
   treatmentPlan: z.string().optional(),
@@ -66,6 +67,7 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
     if (patient) {
         reset({
             name: patient.name,
+            age: patient.age,
             email: patient.email,
             phone: patient.phone,
             diagnosis: patient.diagnosis,
@@ -112,29 +114,34 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                    <div className="grid md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
+                    <div className="grid md:grid-cols-3 gap-6">
+                        <div className="space-y-2 md:col-span-2">
                             <Label htmlFor="name">Full Name</Label>
                             <Input id="name" {...register("name")} />
                             {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
                         </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="age">Age</Label>
+                            <Input id="age" type="number" {...register("age")} />
+                            {errors.age && <p className="text-sm text-destructive">{errors.age.message}</p>}
+                        </div>
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
                             <Input id="email" type="email" {...register("email")} />
                             {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
                         </div>
-                    </div>
-                    <div className="grid md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <Label htmlFor="phone">Phone Number</Label>
                             <Input id="phone" type="tel" {...register("phone")} />
                             {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="diagnosis">Diagnosis</Label>
-                            <Input id="diagnosis" {...register("diagnosis")} />
-                            {errors.diagnosis && <p className="text-sm text-destructive">{errors.diagnosis.message}</p>}
-                        </div>
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="diagnosis">Diagnosis</Label>
+                        <Input id="diagnosis" {...register("diagnosis")} />
+                        {errors.diagnosis && <p className="text-sm text-destructive">{errors.diagnosis.message}</p>}
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="treatment-plan">Treatment Plan</Label>
