@@ -33,7 +33,7 @@ const formSchema = z.object({
   phone: z.string().min(10, "Phone number is required"),
   diagnosis: z.string().min(3, "Diagnosis is required"),
   treatmentPlan: z.string().optional(),
-  prescribedExercises: z.string().optional(),
+  medicines: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -72,7 +72,7 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
             phone: patient.phone,
             diagnosis: patient.diagnosis,
             treatmentPlan: patient.treatmentPlan,
-            prescribedExercises: patient.prescribedExercises,
+            medicines: patient.medicines,
         });
     }
   }, [patient, reset]);
@@ -148,8 +148,8 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
                         <Textarea id="treatment-plan" rows={4} {...register("treatmentPlan")} />
                     </div>
                      <div className="space-y-2">
-                        <Label htmlFor="prescribed-exercises">Prescribed Exercises</Label>
-                        <Textarea id="prescribed-exercises" rows={4} {...register("prescribedExercises")} />
+                        <Label htmlFor="medicines">Medicines</Label>
+                        <Textarea id="medicines" rows={4} {...register("medicines")} />
                     </div>
                     <div className="flex justify-end gap-2">
                         <Button type="submit" disabled={isSubmitting || !isDirty}>

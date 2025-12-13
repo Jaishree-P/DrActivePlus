@@ -16,6 +16,7 @@ export type Treatment = {
 export type Testimonial = {
   id: string;
   name: string;
+
   text: string;
   avatar: string; // Corresponds to placeholder image ID
 };
@@ -53,7 +54,10 @@ export type Patient = {
   phone: string;
   diagnosis: string;
   treatmentPlan: string;
-  prescribedExercises: string;
+  medicines: string;
+  sessionsRequired: number;
+  totalBill: number;
+  consultantPhysio: string;
   registrationDate: string;
   sessions: { date: string; amount: number; paid: boolean }[];
 };

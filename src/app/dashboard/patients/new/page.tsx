@@ -21,10 +21,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 const formSchema = z.object({
   name: z.string().min(2, "Full name is required"),
   age: z.coerce.number().min(0, "Age must be a positive number"),
-  email: z.string().email("Invalid email address").optional().or(z.literal("")),
   phone: z.string().min(10, "Phone number is required"),
   diagnosis: z.string().min(3, "Diagnosis is required"),
   treatmentPlan: z.string().optional(),
+  medicines: z.string().optional(),
+  sessionsRequired: z.coerce.number().min(0, "Sessions must be a positive number"),
+  totalBill: z.coerce.number().min(0, "Total bill must be a positive number"),
+  consultantPhysio: z.string().min(2, "Consultant Physio is required"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -42,16 +45,18 @@ export default function NewPatientPage() {
         resolver: zodResolver(formSchema),
         defaultValues: {
             age: 0,
+            sessionsRequired: 0,
+            totalBill: 0,
         }
     });
 
     const onSubmit: SubmitHandler<FormValues> = (data) => {
         const newPatient: Patient = {
             id: uuidv4(),
+            email: "", // Not in form, but required by type
             ...data,
-            email: data.email || "",
             treatmentPlan: data.treatmentPlan || "",
-            prescribedExercises: "", // Initialize as empty
+            medicines: data.medicines || "",
             registrationDate: new Date().toISOString(),
             sessions: [], // Initialize with no sessions
         };
@@ -70,9 +75,6 @@ export default function NewPatientPage() {
     <div className="space-y-6">
         <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">Add New Patient</h1>
-            <Button variant="outline" asChild>
-                <Link href="/dashboard/patients">Cancel</Link>
-            </Button>
         </div>
 
         <Tabs defaultValue="details">
@@ -117,8 +119,34 @@ export default function NewPatientPage() {
                                 <Label htmlFor="treatment-plan">Treatment</Label>
                                 <Textarea id="treatment-plan" placeholder="Describe the treatment plan..." {...register("treatmentPlan")} />
                             </div>
+                            
+                            <div className="space-y-2">
+                                <Label htmlFor="medicines">Medicines</Label>
+                                <Textarea id="medicines" placeholder="Prescribed medicines..." {...register("medicines")} />
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <Label htmlFor="sessionsRequired">Sessions Required</Label>
+                                    <Input id="sessionsRequired" type="number" {...register("sessionsRequired")} />
+                                    {errors.sessionsRequired && <p className="text-sm text-destructive">{errors.sessionsRequired.message}</p>}
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="totalBill">Total Bill</Label>
+                                    <Input id="totalBill" type="number" {...register("totalBill")} />
+                                    {errors.totalBill && <p className="text-sm text-destructive">{errors.totalBill.message}</p>}
+                                </div>
+                            </div>
+                            
+                             <div className="space-y-2">
+                                <Label htmlFor="consultantPhysio">Consultant Physio</Label>
+                                <Input id="consultantPhysio" placeholder="Dr. Anil Kumar" {...register("consultantPhysio")} />
+                                {errors.consultantPhysio && <p className="text-sm text-destructive">{errors.consultantPhysio.message}</p>}
+                            </div>
+
 
                             <div className="flex justify-end gap-2 mt-8">
+                                <Button type="button" variant="outline" onClick={() => router.push('/dashboard/patients')}>Close</Button>
                                 <Button type="submit" disabled={isSubmitting}>
                                     {isSubmitting ? "Saving..." : "Save Patient"}
                                 </Button>
