@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import AppShell from '@/components/layout/AppShell';
 
 export const metadata: Metadata = {
-  title: 'ActivePlus Rehab',
+  title: 'Doctor Active Plus',
   description: 'Advance Spine | Joint & Laser Center',
 };
 

@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Mail, MapPin, Phone } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { navLinks, WHATSAPP_LINK, WHATSAPP_MESSAGE } from "@/lib/data";
+import { navLinks, contactInfo } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import WhatsAppButton from "../WhatsAppButton";
@@ -15,8 +15,6 @@ import WhatsAppButton from "../WhatsAppButton";
 export default function Header() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const fullWhatsAppUrl = `${WHATSAPP_LINK}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
 
   const NavLinks = ({ isMobile = false }) => (
     <nav
@@ -43,6 +41,22 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="bg-secondary/50">
+        <div className="container mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-6 gap-y-2 py-2 text-xs text-muted-foreground sm:justify-end">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-3 w-3" />
+            <span>{contactInfo.address}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Phone className="h-3 w-3" />
+            <a href={`tel:${contactInfo.phone.replace(/\s/g, "")}`} className="hover:text-primary">{contactInfo.phone}</a>
+          </div>
+          <div className="flex items-center gap-2">
+            <Mail className="h-3 w-3" />
+            <a href={`mailto:${contactInfo.email}`} className="hover:text-primary">{contactInfo.email}</a>
+          </div>
+        </div>
+      </div>
       <div className="container flex h-16 max-w-7xl items-center justify-between">
         <Link href="/" className="mr-6 flex items-center space-x-2">
           <Logo />

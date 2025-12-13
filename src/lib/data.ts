@@ -9,8 +9,8 @@ export const navLinks: NavLink[] = [
 ];
 
 export const contactInfo = {
-    address: '123 Wellness Lane, Health City, 45678',
-    email: 'contact@doctoractiveplus.com',
+    address: "Above Bommanahalli Milk Producers' Cooperative Society, Bommanahalli Main Road, Bommanahalli, Bengaluru – 560049, Karnataka",
+    email: 'drmovementrx@gmail.com',
     phone: '+91 92627 27272',
 };
 
