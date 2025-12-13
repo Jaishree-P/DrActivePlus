@@ -13,8 +13,7 @@ export default function Hero() {
   if (!heroImage) return null;
 
   return (
-    <section className="relative w-full">
-      <div className="relative h-[calc(100vh-4rem)] w-full">
+    <section className="relative w-full h-screen">
         <Image
           src={heroImage.imageUrl}
           alt={heroImage.description}
@@ -24,7 +23,7 @@ export default function Hero() {
           data-ai-hint={heroImage.imageHint}
         />
         <div className="absolute inset-0 bg-black/60" />
-        <div className="relative z-10 flex h-full items-center justify-center">
+        <div className="relative z-10 flex h-full flex-col items-center justify-center">
           <div className="container mx-auto max-w-4xl text-center text-white">
             <h1 className="text-4xl font-extrabold tracking-tight md:text-6xl lg:text-7xl">
               Advance Spine | Joint & Laser Center
@@ -39,11 +38,10 @@ export default function Hero() {
               </Button>
             </div>
           </div>
+           <div className="absolute bottom-0 w-full pb-8 md:pb-16">
+            <Stats />
+          </div>
         </div>
-      </div>
-      <div className="bg-background relative">
-        <Stats />
-      </div>
     </section>
   );
 }
