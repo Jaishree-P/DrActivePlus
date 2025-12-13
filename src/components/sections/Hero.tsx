@@ -23,7 +23,7 @@ export default function Hero() {
           data-ai-hint={heroImage.imageHint}
         />
         <div className="absolute inset-0 bg-black/60" />
-        <div className="relative z-10 flex h-full flex-col items-center justify-center">
+        <div className="relative z-10 flex h-full flex-col items-center justify-center p-4">
           <div className="container mx-auto max-w-4xl text-center text-white">
             <h1 className="text-4xl font-extrabold tracking-tight md:text-6xl lg:text-7xl">
               Advance Spine | Joint & Laser Center
