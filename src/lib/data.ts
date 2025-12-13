@@ -1,4 +1,4 @@
-import type { NavLink, Treatment, Testimonial, WhyChooseUsItem, DoctorProfile, BlogPost } from './types';
+import type { NavLink, Treatment, Testimonial, WhyChooseUsItem, DoctorProfile, BlogPost, Patient } from './types';
 import { Activity, Award, Bone, HeartPulse, ShieldCheck, Stethoscope, Users, Zap } from 'lucide-react';
 
 export const navLinks: NavLink[] = [
@@ -149,4 +149,49 @@ export const defaultBlogPosts: BlogPost[] = [
         imageUrl: 'https://picsum.photos/seed/blog3/600/400',
         imageHint: 'healthy lifestyle',
     }
+];
+
+export const defaultPatients: Patient[] = [
+    {
+        id: '1',
+        name: 'Aarav Sharma',
+        email: 'aarav.sharma@example.com',
+        phone: '9876543210',
+        diagnosis: 'Slipped Disc',
+        treatmentPlan: 'Laser therapy and core strengthening exercises.',
+        prescribedExercises: 'Cat-Cow Stretch, Bird-Dog, Glute Bridges.',
+        registrationDate: '2024-04-15T10:00:00Z',
+        sessions: [
+            { date: '2024-04-15T10:00:00Z', amount: 50, paid: true },
+            { date: '2024-04-18T11:00:00Z', amount: 50, paid: true },
+            { date: '2024-04-22T10:30:00Z', amount: 50, paid: false },
+        ],
+    },
+    {
+        id: '2',
+        name: 'Diya Mehta',
+        email: 'diya.mehta@example.com',
+        phone: '9876543211',
+        diagnosis: 'ACL Tear',
+        treatmentPlan: 'Post-operative rehabilitation, focusing on range of motion and strength.',
+        prescribedExercises: 'Quadriceps sets, heel slides, calf raises.',
+        registrationDate: '2024-04-20T14:00:00Z',
+        sessions: [
+            { date: '2024-04-20T14:00:00Z', amount: 75, paid: true },
+            { date: '2024-04-24T15:00:00Z', amount: 75, paid: false },
+        ],
+    },
+    {
+        id: '3',
+        name: 'Vihaan Joshi',
+        email: 'vihaan.joshi@example.com',
+        phone: '9876543212',
+        diagnosis: 'Frozen Shoulder',
+        treatmentPlan: 'Manual therapy and stretching exercises.',
+        prescribedExercises: 'Pendulum stretch, finger walk up a wall, cross-body reach.',
+        registrationDate: '2024-05-01T09:00:00Z',
+        sessions: [
+            { date: '2024-05-01T09:00:00Z', amount: 60, paid: true },
+        ],
+    },
 ];
