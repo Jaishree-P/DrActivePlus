@@ -51,7 +51,17 @@ export default function Header() {
         <div className="hidden md:flex flex-1 items-center justify-center">
           <NavLinks />
         </div>
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-end gap-4">
+           <div className="hidden lg:flex items-center gap-4 text-sm text-muted-foreground">
+             <a href={`tel:${contactInfo.phone.replace(/\s/g, "")}`} className="flex items-center gap-2 hover:text-primary">
+                <Phone className="w-4 h-4" />
+                <span>{contactInfo.phone}</span>
+              </a>
+              <div className="flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                <span>Bengaluru, Karnataka</span>
+              </div>
+           </div>
           <Button variant="outline" asChild>
             <Link href="/login">Doctor Portal</Link>
           </Button>
@@ -77,6 +87,16 @@ export default function Header() {
                 </Link>
                 <NavLinks isMobile />
                 <div className="mt-auto flex flex-col gap-4">
+                  <div className="text-sm text-muted-foreground space-y-2">
+                     <a href={`tel:${contactInfo.phone.replace(/\s/g, "")}`} className="flex items-center gap-2 hover:text-primary">
+                        <Phone className="w-4 h-4" />
+                        <span>{contactInfo.phone}</span>
+                    </a>
+                     <div className="flex items-start gap-2">
+                        <MapPin className="w-4 h-4 mt-1 flex-shrink-0" />
+                        <span>{contactInfo.address}</span>
+                    </div>
+                  </div>
                   <Button variant="outline" asChild>
                     <Link href="/login">Doctor Portal</Link>
                   </Button>
