@@ -162,14 +162,17 @@ export const defaultPatients: Patient[] = [
         treatmentPlan: 'Laser therapy and core strengthening exercises.',
         medicines: 'Painkillers as needed.',
         sessionsRequired: 10,
-        totalBill: 500,
+        totalBill: 5000,
         consultantPhysio: 'Dr. Anil Kumar',
         registrationDate: '2024-04-15T10:00:00Z',
         sessions: [
-            { id: 's1', date: '2024-04-15T10:00:00Z', amount: 50, paid: true },
-            { id: 's2', date: '2024-04-18T11:00:00Z', amount: 50, paid: true },
-            { id: 's3', date: '2024-04-22T10:30:00Z', amount: 50, paid: false },
+            { id: 's1', date: '2024-04-15T10:00:00Z' },
+            { id: 's2', date: '2024-04-18T11:00:00Z' },
+            { id: 's3', date: '2024-04-22T10:30:00Z' },
         ],
+        payments: [
+            { id: 'p1', date: '2024-04-15T10:00:00Z', amount: 200 },
+        ]
     },
     {
         id: '2',
@@ -181,13 +184,14 @@ export const defaultPatients: Patient[] = [
         treatmentPlan: 'Post-operative rehabilitation, focusing on range of motion and strength.',
         medicines: 'Anti-inflammatories.',
         sessionsRequired: 20,
-        totalBill: 1500,
+        totalBill: 15000,
         consultantPhysio: 'Dr. Anil Kumar',
         registrationDate: '2024-04-20T14:00:00Z',
         sessions: [
-            { id: 's4', date: '2024-04-20T14:00:00Z', amount: 75, paid: true },
-            { id: 's5', date: '2024-04-24T15:00:00Z', amount: 75, paid: false },
+            { id: 's4', date: '2024-04-20T14:00:00Z' },
+            { id: 's5', date: '2024-04-24T15:00:00Z' },
         ],
+        payments: [],
     },
     {
         id: '3',
@@ -199,11 +203,12 @@ export const defaultPatients: Patient[] = [
         treatmentPlan: 'Manual therapy and stretching exercises.',
         medicines: 'None.',
         sessionsRequired: 8,
-        totalBill: 480,
+        totalBill: 4800,
         consultantPhysio: 'Dr. Anil Kumar',
         registrationDate: '2024-05-01T09:00:00Z',
         sessions: [
-            { id: 's6', date: '2024-05-01T09:00:00Z', amount: 60, paid: true },
+            { id: 's6', date: '2024-05-01T09:00:00Z' },
         ],
+        payments: [],
     },
 ];

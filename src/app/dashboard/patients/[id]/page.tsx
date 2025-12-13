@@ -1,10 +1,10 @@
 "use client";
 
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import { type Patient, type PatientSession } from "@/lib/types";
+import { type Patient, type PatientSession, type PatientPayment } from "@/lib/types";
 import { defaultPatients } from "@/lib/data";
 import { notFound, useRouter } from "next/navigation";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useForm, SubmitHandler, useForm as usePaymentForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -29,7 +29,6 @@ import { CalendarIcon, Trash } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { v4 as uuidv4 } from "uuid";
-import { Badge } from "@/components/ui/badge";
 
 
 const formSchema = z.object({
@@ -42,7 +41,14 @@ const formSchema = z.object({
   medicines: z.string().optional(),
 });
 
+const paymentFormSchema = z.object({
+    amount: z.coerce.number().min(1, "Amount must be greater than 0"),
+    date: z.date({ required_error: "Payment date is required" }),
+});
+
+
 type FormValues = z.infer<typeof formSchema>;
+type PaymentFormValues = z.infer<typeof paymentFormSchema>;
 
 type PatientDetailPageProps = {
   params: {
@@ -58,8 +64,23 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
   const { toast } = useToast();
   const router = useRouter();
 
-  const [patient, setPatient] = useState<Patient | undefined>(() => patients.find((p) => p.id === params.id));
+  const [patient, setPatient] = useState<Patient | undefined>(() => {
+    const foundPatient = patients.find((p) => p.id === params.id);
+    if (foundPatient && !foundPatient.payments) {
+      foundPatient.payments = [];
+    }
+    return foundPatient;
+  });
+  
   const [sessionDate, setSessionDate] = useState<Date | undefined>(new Date());
+  
+  const totalPaid = useMemo(() => {
+    return patient?.payments?.reduce((acc, payment) => acc + payment.amount, 0) || 0;
+  }, [patient?.payments]);
+
+  const balanceDue = useMemo(() => {
+      return (patient?.totalBill || 0) - totalPaid;
+  }, [patient?.totalBill, totalPaid]);
 
 
   const {
@@ -71,8 +92,27 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
     resolver: zodResolver(formSchema),
   });
   
+   const {
+    register: registerPayment,
+    handleSubmit: handleSubmitPayment,
+    reset: resetPaymentForm,
+    control: paymentControl,
+    setValue: setPaymentValue,
+    formState: { errors: paymentErrors, isSubmitting: isSubmittingPayment },
+  } = usePaymentForm<PaymentFormValues>({
+    resolver: zodResolver(paymentFormSchema),
+    defaultValues: {
+        date: new Date(),
+        amount: 0,
+    }
+  });
+
+
   useEffect(() => {
     const currentPatient = patients.find((p) => p.id === params.id);
+    if (currentPatient && !currentPatient.payments) {
+        currentPatient.payments = [];
+    }
     setPatient(currentPatient);
     if (currentPatient) {
         reset({
@@ -94,9 +134,9 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
 
   const onSubmit: SubmitHandler<FormValues> = (data) => {
     const updatedPatients = patients.map((p) =>
-      p.id === params.id ? { ...p, ...data } : p
+      p.id === params.id ? { ...patient, ...data } : p
     );
-    setPatients(updatedPatients);
+    setPatients(updatedPatients as Patient[]);
     toast({
       title: "Patient Updated",
       description: `${data.name}'s record has been successfully updated.`,
@@ -110,11 +150,9 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
     const newSession: PatientSession = {
       id: uuidv4(),
       date: sessionDate.toISOString(),
-      amount: patient.totalBill / patient.sessionsRequired,
-      paid: false,
     };
 
-    const updatedPatient = {
+    const updatedPatient: Patient = {
       ...patient,
       sessions: [...patient.sessions, newSession],
     };
@@ -133,7 +171,7 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
     if (!patient) return;
 
     const updatedSessions = patient.sessions.filter(s => s.id !== sessionId);
-    const updatedPatient = { ...patient, sessions: updatedSessions };
+    const updatedPatient: Patient = { ...patient, sessions: updatedSessions };
 
     setPatient(updatedPatient);
     const updatedPatients = patients.map((p) => (p.id === patient.id ? updatedPatient : p));
@@ -144,24 +182,46 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
       description: "The session has been removed.",
     });
   };
-
-  const handleTogglePayment = (sessionId: string) => {
+  
+  const onAddPayment: SubmitHandler<PaymentFormValues> = (data) => {
     if (!patient) return;
+    
+    const newPayment: PatientPayment = {
+        id: uuidv4(),
+        date: data.date.toISOString(),
+        amount: data.amount,
+    };
 
-    const updatedSessions = patient.sessions.map(session => 
-      session.id === sessionId ? { ...session, paid: !session.paid } : session
-    );
-    const updatedPatient = { ...patient, sessions: updatedSessions };
+    const updatedPatient: Patient = {
+        ...patient,
+        payments: [...(patient.payments || []), newPayment],
+    };
 
     setPatient(updatedPatient);
-    const updatedPatients = patients.map(p => p.id === patient.id ? updatedPatient : p);
+    const updatedPatients = patients.map((p) => (p.id === patient.id ? updatedPatient : p));
     setPatients(updatedPatients);
     
-    const targetSession = updatedSessions.find(s => s.id === sessionId);
     toast({
-      title: "Payment Updated",
-      description: `Session marked as ${targetSession?.paid ? "Paid" : "Unpaid"}.`,
+      title: "Payment Added",
+      description: `Rs. ${data.amount.toFixed(2)} payment recorded for ${patient.name}.`,
     });
+    resetPaymentForm({ amount: 0, date: new Date()});
+  };
+  
+  const handleDeletePayment = (paymentId: string) => {
+      if (!patient) return;
+      
+      const updatedPayments = patient.payments.filter(p => p.id !== paymentId);
+      const updatedPatient = { ...patient, payments: updatedPayments };
+
+      setPatient(updatedPatient);
+      const updatedPatients = patients.map(p => p.id === patient.id ? updatedPatient : p);
+      setPatients(updatedPatients);
+
+      toast({
+          title: "Payment Deleted",
+          description: "The payment record has been removed.",
+      });
   };
 
 
@@ -308,30 +368,76 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
                     <CardHeader>
                         <CardTitle>Payment History</CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-8">
+                        <div className="grid grid-cols-3 gap-4 text-center">
+                            <div>
+                                <p className="text-sm text-muted-foreground">Total Bill</p>
+                                <p className="text-2xl font-bold">₹{patient.totalBill.toFixed(2)}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground">Total Paid</p>
+                                <p className="text-2xl font-bold text-green-600">₹{totalPaid.toFixed(2)}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground">Balance Due</p>
+                                <p className="text-2xl font-bold text-red-600">₹{balanceDue.toFixed(2)}</p>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleSubmitPayment(onAddPayment)} className="flex items-end gap-4">
+                            <div className="space-y-2 flex-grow">
+                                <Label htmlFor="amount">Amount (₹)</Label>
+                                <Input id="amount" type="number" {...registerPayment("amount")} />
+                                {paymentErrors.amount && <p className="text-sm text-destructive">{paymentErrors.amount.message}</p>}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="date">Date</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                    <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                        "w-[240px] justify-start text-left font-normal",
+                                        !paymentControl._getWatch('date') && "text-muted-foreground"
+                                        )}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {paymentControl._getWatch('date') ? format(paymentControl._getWatch('date'), "PPP") : <span>Pick a date</span>}
+                                    </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                    <Calendar
+                                        mode="single"
+                                        selected={paymentControl._getWatch('date')}
+                                        onSelect={(date) => setPaymentValue('date', date as Date)}
+                                        initialFocus
+                                    />
+                                    </PopoverContent>
+                                </Popover>
+                                {paymentErrors.date && <p className="text-sm text-destructive">{paymentErrors.date.message}</p>}
+                            </div>
+                           <Button type="submit" disabled={isSubmittingPayment}>{isSubmittingPayment ? "Adding..." : "Add Payment"}</Button>
+                        </form>
+
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Session Date</TableHead>
+                                    <TableHead>#</TableHead>
+                                    <TableHead>Date</TableHead>
                                     <TableHead>Amount</TableHead>
-                                    <TableHead>Status</TableHead>
                                     <TableHead className="text-right">Action</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {patient.sessions.length > 0 ? (
-                                    patient.sessions.map((session) => (
-                                        <TableRow key={session.id}>
-                                            <TableCell>{format(new Date(session.date), "PPP")}</TableCell>
-                                            <TableCell>Rs. {session.amount.toFixed(2)}</TableCell>
-                                            <TableCell>
-                                                <Badge variant={session.paid ? "default" : "destructive"}>
-                                                    {session.paid ? "Paid" : "Unpaid"}
-                                                </Badge>
-                                            </TableCell>
+                                {patient.payments && patient.payments.length > 0 ? (
+                                    patient.payments.map((payment, index) => (
+                                        <TableRow key={payment.id}>
+                                            <TableCell>{index + 1}</TableCell>
+                                            <TableCell>{format(new Date(payment.date), "PPP")}</TableCell>
+                                            <TableCell>₹{payment.amount.toFixed(2)}</TableCell>
                                             <TableCell className="text-right">
-                                                <Button variant="secondary" size="sm" onClick={() => handleTogglePayment(session.id)}>
-                                                    {session.paid ? "Mark Unpaid" : "Mark Paid"}
+                                                 <Button variant="ghost" size="icon" onClick={() => handleDeletePayment(payment.id)}>
+                                                    <Trash className="h-4 w-4 text-destructive" />
                                                 </Button>
                                             </TableCell>
                                         </TableRow>
@@ -339,7 +445,7 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
                                 ) : (
                                     <TableRow>
                                         <TableCell colSpan={4} className="text-center h-24">
-                                            No session history for this patient.
+                                            No payment history for this patient.
                                         </TableCell>
                                     </TableRow>
                                 )}
@@ -352,5 +458,3 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
     </div>
   );
 }
-
-    

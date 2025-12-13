@@ -49,8 +49,12 @@ export type BlogPost = {
 export type PatientSession = { 
   id: string;
   date: string; 
-  amount: number; 
-  paid: boolean 
+};
+
+export type PatientPayment = {
+  id: string;
+  date: string;
+  amount: number;
 };
 
 export type Patient = {
@@ -67,4 +71,5 @@ export type Patient = {
   consultantPhysio: string;
   registrationDate: string;
   sessions: PatientSession[];
+  payments: PatientPayment[];
 };

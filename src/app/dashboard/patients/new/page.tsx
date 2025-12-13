@@ -58,6 +58,7 @@ export default function NewPatientPage() {
             medicines: data.medicines || "",
             registrationDate: new Date().toISOString(),
             sessions: [], // Initialize with no sessions
+            payments: [], // Initialize with no payments
         };
 
         setPatients([newPatient, ...patients]);
