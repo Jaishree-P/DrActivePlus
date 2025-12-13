@@ -35,7 +35,7 @@ export default function About() {
           </div>
           <div className="md:col-span-2 text-center md:text-left">
             <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-              Meet Our Expert
+              Meet Our Doctor Expert
             </h2>
             <h3 className="mt-2 text-2xl font-semibold">
               {doctorProfile.name}
