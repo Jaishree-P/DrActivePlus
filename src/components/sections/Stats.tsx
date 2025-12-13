@@ -22,13 +22,13 @@ export default function Stats() {
   return (
     <section className="py-8 text-white">
       <div className="container mx-auto max-w-7xl">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {stats.map((stat, index) => (
-            <div key={index} className="flex items-center justify-center gap-4 p-4">
-              <stat.icon className="w-12 h-12 text-primary" />
+            <div key={index} className="flex items-center justify-center gap-4">
+              <stat.icon className="w-10 h-10 text-primary" />
               <div>
-                <p className="text-3xl font-bold">{stat.value}</p>
-                <p className="text-gray-300">{stat.label}</p>
+                <p className="text-2xl font-bold">{stat.value}</p>
+                <p className="text-sm text-gray-300">{stat.label}</p>
               </div>
             </div>
           ))}
