@@ -141,7 +141,7 @@ export default function PatientsTable() {
 
     // Sort sessions and payments
     const sortedSessions = patient.sessions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    const sortedPayments = patient.payments.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const sortedPayments = (patient.payments || []).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     // --- Session Dates Table ---
     if (sortedSessions && sortedSessions.length > 0) {
@@ -171,41 +171,44 @@ export default function PatientsTable() {
     finalY += 10;
 
     // --- Payment Table ---
-    autoTable(doc, {
-      startY: finalY,
-      head: [['#', 'Payment Date', 'Amount Paid']],
-      body: sortedPayments.map((payment, index) => [
-        index + 1,
-        format(new Date(payment.date), "dd MMM yyyy"),
-        `₹ ${payment.amount.toFixed(2)}`
-      ]),
-      theme: 'grid',
-      headStyles: {
-        fillColor: "#d90429", // Red
-        textColor: 255,
-        fontStyle: 'bold',
-      },
-      columnStyles: {
-        0: { cellWidth: 10 },
-        2: { halign: 'right' }
-      },
-      margin: { left: 14, right: 14 },
-    });
-    finalY = (doc as any).lastAutoTable.finalY;
+    if (sortedPayments && sortedPayments.length > 0) {
+      autoTable(doc, {
+        startY: finalY,
+        head: [['#', 'Payment Date', 'Amount Paid']],
+        body: sortedPayments.map((payment, index) => [
+          index + 1,
+          format(new Date(payment.date), "dd MMM yyyy"),
+          `Rs. ${payment.amount.toFixed(2)}`
+        ]),
+        theme: 'grid',
+        headStyles: {
+          fillColor: "#d90429", // Red
+          textColor: 255,
+          fontStyle: 'bold',
+        },
+        columnStyles: {
+          0: { cellWidth: 10 },
+          2: { halign: 'right' }
+        },
+        margin: { left: 14, right: 14 },
+      });
+      finalY = (doc as any).lastAutoTable.finalY;
+    }
+
 
     // --- Totals ---
     finalY += 10;
-    const totalPaid = patient.payments.reduce((sum, p) => sum + p.amount, 0);
+    const totalPaid = (patient.payments || []).reduce((sum, p) => sum + p.amount, 0);
     const balanceDue = patient.totalBill - totalPaid;
 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text('Total Bill:', 14, finalY);
-    doc.text(`₹ ${patient.totalBill.toFixed(2)}`, docWidth - 14, finalY, { align: 'right' });
+    doc.text(`Rs. ${patient.totalBill.toFixed(2)}`, docWidth - 14, finalY, { align: 'right' });
 
     finalY += 7;
     doc.text('Total Paid:', 14, finalY);
-    doc.text(`₹ ${totalPaid.toFixed(2)}`, docWidth - 14, finalY, { align: 'right' });
+    doc.text(`Rs. ${totalPaid.toFixed(2)}`, docWidth - 14, finalY, { align: 'right' });
     
     finalY += 7;
     doc.setDrawColor(150, 150, 150);
@@ -216,7 +219,7 @@ export default function PatientsTable() {
     doc.setFontSize(12);
     doc.setTextColor("#d90429");
     doc.text("Balance Due:", 14, finalY);
-    doc.text(`₹ ${balanceDue.toFixed(2)}`, docWidth - 14, finalY, { align: 'right' });
+    doc.text(`Rs. ${balanceDue.toFixed(2)}`, docWidth - 14, finalY, { align: 'right' });
 
 
     doc.save(`invoice-${patient.name.replace(/\s/g, '-')}-${patient.id}.pdf`);
@@ -310,3 +313,5 @@ export default function PatientsTable() {
     </>
   );
 }
+
+    

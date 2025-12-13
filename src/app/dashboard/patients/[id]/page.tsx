@@ -4,7 +4,7 @@ import { useLocalStorage } from "@/hooks/use-local-storage";
 import { type Patient, type PatientSession, type PatientPayment } from "@/lib/types";
 import { defaultPatients } from "@/lib/data";
 import { notFound, useRouter } from "next/navigation";
-import { useForm, SubmitHandler, useForm as usePaymentForm } from "react-hook-form";
+import { useForm, SubmitHandler, useForm as usePaymentForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
@@ -75,11 +75,13 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
   const [sessionDate, setSessionDate] = useState<Date | undefined>(new Date());
   
   const sortedSessions = useMemo(() => {
-    return patient?.sessions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) || [];
-  }, [patient?.sessions]);
+    if (!patient) return [];
+    return [...patient.sessions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [patient]);
 
   const sortedPayments = useMemo(() => {
-    return patient?.payments?.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) || [];
+    if (!patient?.payments) return [];
+    return [...patient.payments].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [patient?.payments]);
   
   const totalPaid = useMemo(() => {
@@ -105,7 +107,6 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
     handleSubmit: handleSubmitPayment,
     reset: resetPaymentForm,
     control: paymentControl,
-    setValue: setPaymentValue,
     formState: { errors: paymentErrors, isSubmitting: isSubmittingPayment },
   } = usePaymentForm<PaymentFormValues>({
     resolver: zodResolver(paymentFormSchema),
@@ -118,11 +119,11 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
 
   useEffect(() => {
     const currentPatient = patients.find((p) => p.id === params.id);
-    if (currentPatient && !currentPatient.payments) {
-        currentPatient.payments = [];
-    }
-    setPatient(currentPatient);
     if (currentPatient) {
+        if (!currentPatient.payments) {
+            currentPatient.payments = [];
+        }
+        setPatient(currentPatient);
         reset({
             name: currentPatient.name,
             age: currentPatient.age,
@@ -139,12 +140,17 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
   if (!patient) {
     notFound();
   }
+  
+  const updatePatientInStorage = (updatedPatient: Patient) => {
+      const updatedPatients = patients.map(p => p.id === updatedPatient.id ? updatedPatient : p);
+      setPatients(updatedPatients);
+  }
 
   const onSubmit: SubmitHandler<FormValues> = (data) => {
-    const updatedPatients = patients.map((p) =>
-      p.id === params.id ? { ...patient, ...data } : p
-    );
-    setPatients(updatedPatients as Patient[]);
+    if (!patient) return;
+    const updatedPatient = { ...patient, ...data };
+    setPatient(updatedPatient);
+    updatePatientInStorage(updatedPatient);
     toast({
       title: "Patient Updated",
       description: `${data.name}'s record has been successfully updated.`,
@@ -166,8 +172,7 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
     };
 
     setPatient(updatedPatient);
-    const updatedPatients = patients.map((p) => (p.id === patient.id ? updatedPatient : p));
-    setPatients(updatedPatients);
+    updatePatientInStorage(updatedPatient);
 
     toast({
       title: "Session Added",
@@ -182,8 +187,7 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
     const updatedPatient: Patient = { ...patient, sessions: updatedSessions };
 
     setPatient(updatedPatient);
-    const updatedPatients = patients.map((p) => (p.id === patient.id ? updatedPatient : p));
-    setPatients(updatedPatients);
+    updatePatientInStorage(updatedPatient);
 
     toast({
       title: "Session Deleted",
@@ -206,8 +210,7 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
     };
 
     setPatient(updatedPatient);
-    const updatedPatients = patients.map((p) => (p.id === patient.id ? updatedPatient : p));
-    setPatients(updatedPatients);
+    updatePatientInStorage(updatedPatient);
     
     toast({
       title: "Payment Added",
@@ -219,12 +222,11 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
   const handleDeletePayment = (paymentId: string) => {
       if (!patient) return;
       
-      const updatedPayments = patient.payments.filter(p => p.id !== paymentId);
+      const updatedPayments = (patient.payments || []).filter(p => p.id !== paymentId);
       const updatedPatient = { ...patient, payments: updatedPayments };
 
       setPatient(updatedPatient);
-      const updatedPatients = patients.map(p => p.id === patient.id ? updatedPatient : p);
-      setPatients(updatedPatients);
+      updatePatientInStorage(updatedPatient);
 
       toast({
           title: "Payment Deleted",
@@ -380,48 +382,54 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
                         <div className="grid grid-cols-3 gap-4 text-center">
                             <div>
                                 <p className="text-sm text-muted-foreground">Total Bill</p>
-                                <p className="text-2xl font-bold">₹{patient.totalBill.toFixed(2)}</p>
+                                <p className="text-2xl font-bold">Rs. {patient.totalBill.toFixed(2)}</p>
                             </div>
                             <div>
                                 <p className="text-sm text-muted-foreground">Total Paid</p>
-                                <p className="text-2xl font-bold text-green-600">₹{totalPaid.toFixed(2)}</p>
+                                <p className="text-2xl font-bold text-green-600">Rs. {totalPaid.toFixed(2)}</p>
                             </div>
                             <div>
                                 <p className="text-sm text-muted-foreground">Balance Due</p>
-                                <p className="text-2xl font-bold text-red-600">₹{balanceDue.toFixed(2)}</p>
+                                <p className="text-2xl font-bold text-red-600">Rs. {balanceDue.toFixed(2)}</p>
                             </div>
                         </div>
 
                         <form onSubmit={handleSubmitPayment(onAddPayment)} className="flex items-end gap-4">
                             <div className="space-y-2 flex-grow">
-                                <Label htmlFor="amount">Amount (₹)</Label>
+                                <Label htmlFor="amount">Amount (Rs.)</Label>
                                 <Input id="amount" type="number" {...registerPayment("amount")} />
                                 {paymentErrors.amount && <p className="text-sm text-destructive">{paymentErrors.amount.message}</p>}
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="date">Date</Label>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                    <Button
-                                        variant={"outline"}
-                                        className={cn(
-                                        "w-[240px] justify-start text-left font-normal",
-                                        !paymentControl._getWatch('date') && "text-muted-foreground"
-                                        )}
-                                    >
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {paymentControl._getWatch('date') ? format(paymentControl._getWatch('date'), "PPP") : <span>Pick a date</span>}
-                                    </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0">
-                                    <Calendar
-                                        mode="single"
-                                        selected={paymentControl._getWatch('date')}
-                                        onSelect={(date) => setPaymentValue('date', date as Date)}
-                                        initialFocus
-                                    />
-                                    </PopoverContent>
-                                </Popover>
+                                <Controller
+                                    control={paymentControl}
+                                    name="date"
+                                    render={({ field }) => (
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                            <Button
+                                                variant={"outline"}
+                                                className={cn(
+                                                "w-[240px] justify-start text-left font-normal",
+                                                !field.value && "text-muted-foreground"
+                                                )}
+                                            >
+                                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                                            </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0">
+                                            <Calendar
+                                                mode="single"
+                                                selected={field.value}
+                                                onSelect={field.onChange}
+                                                initialFocus
+                                            />
+                                            </PopoverContent>
+                                        </Popover>
+                                    )}
+                                />
                                 {paymentErrors.date && <p className="text-sm text-destructive">{paymentErrors.date.message}</p>}
                             </div>
                            <Button type="submit" disabled={isSubmittingPayment}>{isSubmittingPayment ? "Adding..." : "Add Payment"}</Button>
@@ -442,7 +450,7 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
                                         <TableRow key={payment.id}>
                                             <TableCell>{index + 1}</TableCell>
                                             <TableCell>{format(new Date(payment.date), "PPP")}</TableCell>
-                                            <TableCell>₹{payment.amount.toFixed(2)}</TableCell>
+                                            <TableCell>Rs. {payment.amount.toFixed(2)}</TableCell>
                                             <TableCell className="text-right">
                                                  <Button variant="ghost" size="icon" onClick={() => handleDeletePayment(payment.id)}>
                                                     <Trash className="h-4 w-4 text-destructive" />
@@ -466,3 +474,5 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
     </div>
   );
 }
+
+    
