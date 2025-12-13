@@ -5,7 +5,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
-import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,7 +67,7 @@ export default function NewPatientPage() {
             description: `${newPatient.name} has been added to your patient list.`,
         });
 
-        router.push("/dashboard/patients");
+        router.push(`/dashboard/patients/${newPatient.id}`);
     };
 
   return (

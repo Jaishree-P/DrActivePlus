@@ -46,6 +46,13 @@ export type BlogPost = {
   imageHint: string;
 };
 
+export type PatientSession = { 
+  id: string;
+  date: string; 
+  amount: number; 
+  paid: boolean 
+};
+
 export type Patient = {
   id: string;
   name: string;
@@ -59,5 +66,5 @@ export type Patient = {
   totalBill: number;
   consultantPhysio: string;
   registrationDate: string;
-  sessions: { date: string; amount: number; paid: boolean }[];
+  sessions: PatientSession[];
 };

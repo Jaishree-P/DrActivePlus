@@ -166,9 +166,9 @@ export const defaultPatients: Patient[] = [
         consultantPhysio: 'Dr. Anil Kumar',
         registrationDate: '2024-04-15T10:00:00Z',
         sessions: [
-            { date: '2024-04-15T10:00:00Z', amount: 50, paid: true },
-            { date: '2024-04-18T11:00:00Z', amount: 50, paid: true },
-            { date: '2024-04-22T10:30:00Z', amount: 50, paid: false },
+            { id: 's1', date: '2024-04-15T10:00:00Z', amount: 50, paid: true },
+            { id: 's2', date: '2024-04-18T11:00:00Z', amount: 50, paid: true },
+            { id: 's3', date: '2024-04-22T10:30:00Z', amount: 50, paid: false },
         ],
     },
     {
@@ -185,8 +185,8 @@ export const defaultPatients: Patient[] = [
         consultantPhysio: 'Dr. Anil Kumar',
         registrationDate: '2024-04-20T14:00:00Z',
         sessions: [
-            { date: '2024-04-20T14:00:00Z', amount: 75, paid: true },
-            { date: '2024-04-24T15:00:00Z', amount: 75, paid: false },
+            { id: 's4', date: '2024-04-20T14:00:00Z', amount: 75, paid: true },
+            { id: 's5', date: '2024-04-24T15:00:00Z', amount: 75, paid: false },
         ],
     },
     {
@@ -203,7 +203,7 @@ export const defaultPatients: Patient[] = [
         consultantPhysio: 'Dr. Anil Kumar',
         registrationDate: '2024-05-01T09:00:00Z',
         sessions: [
-            { date: '2024-05-01T09:00:00Z', amount: 60, paid: true },
+            { id: 's6', date: '2024-05-01T09:00:00Z', amount: 60, paid: true },
         ],
     },
 ];
