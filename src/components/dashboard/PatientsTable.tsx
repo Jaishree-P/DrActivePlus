@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState } from "react";
@@ -56,15 +55,6 @@ export default function PatientsTable() {
   const [pdfPreview, setPdfPreview] = useState<{dataUri: string, patient: Patient} | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
-  const handleDelete = (patientId: string) => {
-    setPatients(patients.filter((p) => p.id !== patientId));
-    setPatientToDelete(null);
-    toast({
-        title: "Patient Deleted",
-        description: "The patient record has been removed.",
-    });
-  };
-  
   const handleDownloadBill = (patient: Patient) => {
     if (isGeneratingPdf) return;
     setIsGeneratingPdf(true);
@@ -128,12 +118,15 @@ export default function PatientsTable() {
         `Diagnosis: ${safeString(patient.diagnosis)}`,
       ];
       
-      const treatmentLines = doc.splitTextToSize(`Treatment: ${safeString(patient.treatmentPlan)}`, (docWidth / 2) - 28);
-      const allDetails = [...patientDetails, ...treatmentLines];
-
-      allDetails.forEach(detailLine => {
+      patientDetails.forEach(detailLine => {
         doc.text(detailLine, 14, yPos);
         yPos += 7;
+      });
+
+      const treatmentLines = doc.splitTextToSize(`Treatment: ${safeString(patient.treatmentPlan)}`, (docWidth / 2) - 28);
+      treatmentLines.forEach((line: string) => {
+          doc.text(line, 14, yPos);
+          yPos += 7;
       });
       
       const patientDetailsEndY = yPos;
