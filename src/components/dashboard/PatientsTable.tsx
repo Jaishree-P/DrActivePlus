@@ -35,43 +35,17 @@ import { MoreHorizontal, Download, Edit, Trash, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import { defaultDoctorProfile, defaultPatients, contactInfo } from "@/lib/data";
-import { type Patient, type DoctorProfile } from "@/lib/types";
+import { defaultPatients, contactInfo } from "@/lib/data";
+import { type Patient } from "@/lib/types";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-
-async function fetchImageAsBase64(url: string) {
-  try {
-    const absoluteUrl = url.startsWith('/') ? `${window.location.origin}${url}` : url;
-    const response = await fetch(absoluteUrl);
-    if (!response.ok) {
-        throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
-    }
-    const blob = await response.blob();
-    return new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = (error) => {
-          console.error("FileReader error:", error);
-          reject(error);
-      };
-      reader.readAsDataURL(blob);
-    });
-  } catch (error) {
-    console.error("Error fetching image as base64:", error);
-    return ""; // Return empty string or a placeholder if fetch fails
-  }
-}
+import { logoBase64 } from "@/lib/logo-base64";
 
 
 export default function PatientsTable() {
   const router = useRouter();
   const { toast } = useToast();
   const [patients, setPatients] = useLocalStorage<Patient[]>("patients", defaultPatients);
-  const [doctorProfile] = useLocalStorage<DoctorProfile>(
-    "doctor-profile",
-    defaultDoctorProfile
-  );
   const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null);
 
   const handleDelete = (patientId: string) => {
@@ -88,7 +62,6 @@ export default function PatientsTable() {
     const docWidth = doc.internal.pageSize.getWidth();
     
     // --- Logo & Header ---
-    const logoBase64 = await fetchImageAsBase64('/logo.png');
     doc.setFontSize(22);
     doc.setTextColor(217, 4, 41); // Red color for main title
     doc.setFont("helvetica", "bold");
@@ -359,3 +332,5 @@ export default function PatientsTable() {
     </>
   );
 }
+
+    
