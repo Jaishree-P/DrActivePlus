@@ -1,7 +1,4 @@
 
-
-
-
 "use client";
 
 import { useState } from "react";
@@ -46,7 +43,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { defaultPatients, contactInfo } from "@/lib/data";
-import { logoBase64 } from "@/lib/logo-base64";
 import { type Patient } from "@/lib/types";
 import { format, isValid, parseISO } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -91,12 +87,9 @@ export default function PatientsTable() {
       };
       
       // Header
-      if (logoBase64) {
-        doc.addImage(logoBase64, 'PNG', 14, 15, 10, 10);
-      }
       doc.setFontSize(22);
       doc.setTextColor(185, 28, 28);
-      doc.text("Doctor Active Plus", 28, yPos);
+      doc.text("Doctor Active Plus", 14, yPos);
       yPos += 8;
 
       doc.setFontSize(10);
@@ -104,7 +97,8 @@ export default function PatientsTable() {
       doc.text("PHYSIOTHERAPY & PAIN CLINIC", 14, yPos);
       yPos += 5;
       
-      const addressLines = doc.splitTextToSize(safeString(contactInfo.address), docWidth - 28);
+      const address = safeString(contactInfo.address);
+      const addressLines = doc.splitTextToSize(address, docWidth - 28);
       doc.text(addressLines, 14, yPos);
       yPos += (addressLines.length * 4) + 2;
 
@@ -137,8 +131,9 @@ export default function PatientsTable() {
       ];
 
       patientDetails.forEach(detail => {
-        doc.text(`${detail.title} ${detail.value}`, 14, yPos);
-        yPos += 7;
+        const lines = doc.splitTextToSize(`${detail.title} ${detail.value}`, 90);
+        doc.text(lines, 14, yPos);
+        yPos += lines.length * 7;
       });
       
       const patientDetailsEndY = yPos;
@@ -202,14 +197,16 @@ export default function PatientsTable() {
 
       // Footer
       const pageHeight = doc.internal.pageSize.getHeight();
-      let footerY = Math.max(lastY, pageHeight - 60);
-      if (footerY > pageHeight - 60) {
-        doc.addPage();
-        footerY = 20;
+      let footerY = pageHeight - 40; // Position footer from bottom
+      if (lastY > footerY) {
+         footerY = lastY + 10;
+         if (footerY > pageHeight - 40) {
+            doc.addPage();
+            footerY = 20;
+         }
       }
       
       doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
       doc.text("Seal & Sign", docWidth - 14, footerY, { align: 'right' });
       footerY += 15;
 
@@ -350,9 +347,3 @@ export default function PatientsTable() {
     </>
   );
 }
-
-
-
-    
-
-    
