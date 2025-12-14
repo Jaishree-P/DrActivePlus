@@ -4,7 +4,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import {
   Table,
   TableBody,
@@ -83,15 +82,13 @@ export default function PatientsTable() {
         doc.text("Advance Spine | Joint & Laser Center", 40, 28);
         
         const address = contactInfo.address || '';
-        const addressLines = doc.splitTextToSize(address, docWidth - 40);
+        const addressLines = doc.splitTextToSize(address, docWidth - 100);
         doc.text(addressLines, docWidth - 14, 20, { align: 'right' });
         yPos = doc.getTextDimensions(addressLines).h + 22;
 
         doc.text(`Phone: ${contactInfo.phone || ''}`, docWidth - 14, yPos, { align: 'right' });
         doc.text(`Email: ${contactInfo.email || ''}`, docWidth - 14, yPos + 5, { align: 'right' });
 
-
-        // Bill Info
         yPos += 15;
         doc.setLineWidth(0.5);
         doc.line(14, yPos, docWidth - 14, yPos);
@@ -106,49 +103,74 @@ export default function PatientsTable() {
         yPos += 7;
 
         const regDate = patient.registrationDate ? format(new Date(patient.registrationDate), 'PPP') : '';
-        doc.text(`Patient ID: ${patient.id.substring(0, 8)}`, 14, yPos);
+        doc.text(`Patient ID: ${(patient.id || '').substring(0, 8)}`, 14, yPos);
         doc.text(`Date: ${regDate}`, docWidth - 14, yPos, { align: 'right' });
         yPos += 15;
-
-        // Tables
+        
+        // Manual Tables
         const sessions = patient.sessions || [];
         if (sessions.length > 0) {
-            autoTable(doc, {
-                startY: yPos,
-                head: [['Session Date']],
-                body: sessions.map(s => [s.date ? format(new Date(s.date), 'PPP') : '']),
-                theme: 'grid',
-                headStyles: { fillColor: [22, 163, 74] },
-                didDrawPage: (data) => {
-                    yPos = data.cursor?.y ?? yPos;
+            yPos += 5;
+            doc.setFontSize(12);
+            doc.text('Session Attendance', 14, yPos);
+            yPos += 8;
+            doc.setFontSize(10);
+            doc.setLineWidth(0.2);
+            doc.line(14, yPos, docWidth - 14, yPos); // Header line
+            yPos += 6;
+            doc.text('Session Date', 16, yPos);
+            yPos += 2;
+            doc.line(14, yPos, docWidth - 14, yPos);
+            yPos += 6;
+
+            sessions.forEach(s => {
+                doc.text(s.date ? format(new Date(s.date), 'PPP') : '', 16, yPos);
+                yPos += 7;
+                if (yPos > 280) {
+                    doc.addPage();
+                    yPos = 20;
                 }
             });
-            yPos = (doc as any).lastAutoTable.finalY + 10;
+             yPos += 5;
         }
 
         const payments = patient.payments || [];
         if (payments.length > 0) {
-             autoTable(doc, {
-                startY: yPos,
-                head: [['Payment Date', 'Amount (Rs.)']],
-                body: payments.map(p => [
-                    p.date ? format(new Date(p.date), 'PPP') : '',
-                    (p.amount || 0).toFixed(2)
-                ]),
-                theme: 'grid',
-                headStyles: { fillColor: [22, 163, 74] },
-                didDrawPage: (data) => {
-                    yPos = data.cursor?.y ?? yPos;
+            if (yPos > 250) { doc.addPage(); yPos = 20; }
+            yPos += 5;
+            doc.setFontSize(12);
+            doc.text('Payment History', 14, yPos);
+            yPos += 8;
+            doc.setFontSize(10);
+            doc.setLineWidth(0.2);
+            doc.line(14, yPos, docWidth - 14, yPos); // Header line
+            yPos += 6;
+            doc.text('Payment Date', 16, yPos);
+            doc.text('Amount (Rs.)', docWidth - 16, yPos, {align: 'right'});
+            yPos += 2;
+            doc.line(14, yPos, docWidth - 14, yPos);
+            yPos += 6;
+            
+            payments.forEach(p => {
+                doc.text(p.date ? format(new Date(p.date), 'PPP') : '', 16, yPos);
+                doc.text((p.amount || 0).toFixed(2), docWidth - 16, yPos, {align: 'right'});
+                yPos += 7;
+                if (yPos > 280) {
+                    doc.addPage();
+                    yPos = 20;
                 }
             });
-            yPos = (doc as any).lastAutoTable.finalY + 10;
+            yPos += 5;
         }
+
+        if (yPos > 240) { doc.addPage(); yPos = 20; }
 
         // Totals
         const totalBill = Number(patient.totalBill) || 0;
         const totalPaid = (patient.payments || []).reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
         const balanceDue = totalBill - totalPaid;
 
+        yPos += 10;
         doc.setFontSize(12);
         const totalsX = docWidth / 2 > 100 ? docWidth / 2 : 100;
         
@@ -192,7 +214,7 @@ export default function PatientsTable() {
     
     const link = document.createElement('a');
     link.href = pdfPreview.dataUri;
-    link.download = `invoice-${patient.name.replace(/\s/g, '-')}-${patient.billNumber}.pdf`;
+    link.download = `invoice-${(patient.name || 'patient').replace(/\s/g, '-')}-${patient.billNumber || 'na'}.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -239,7 +261,7 @@ export default function PatientsTable() {
                             <Eye className="mr-2 h-4 w-4" /> View
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleDownloadBill(patient)}>
-                            <Download className="mr-2 h-4 w-4" /> Download Bill
+                            <Download className="mr-2 h-4 w-4" /> {isGeneratingPdf ? 'Generating...' : 'Download Bill'}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-destructive"
@@ -302,3 +324,5 @@ export default function PatientsTable() {
     </>
   );
 }
+
+    
