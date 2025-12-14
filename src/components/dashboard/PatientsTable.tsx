@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState } from "react";
@@ -89,12 +90,12 @@ export default function PatientsTable() {
       // Header
       doc.setFontSize(22);
       doc.setTextColor(185, 28, 28);
-      doc.text("Doctor Active Plus", 14, yPos);
+      doc.text("Doctor Active Plus", docWidth / 2, yPos, { align: 'center' });
       yPos += 8;
 
       doc.setFontSize(10);
       doc.setTextColor(100, 116, 139);
-      doc.text("PHYSIOTHERAPY & PAIN CLINIC", 14, yPos);
+      doc.text("PHYSIOTHERAPY & PAIN CLINIC", docWidth / 2, yPos, { align: 'center' });
       yPos += 5;
       
       const address = safeString(contactInfo.address);
