@@ -72,4 +72,5 @@ export type Patient = {
   registrationDate: string;
   sessions: PatientSession[];
   payments: PatientPayment[];
+  billNumber: string;
 };

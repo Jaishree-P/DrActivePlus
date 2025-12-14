@@ -42,12 +42,19 @@ import { useToast } from "@/hooks/use-toast";
 
 async function fetchImageAsBase64(url: string) {
   try {
-    const response = await fetch(url);
+    const absoluteUrl = url.startsWith('/') ? `${window.location.origin}${url}` : url;
+    const response = await fetch(absoluteUrl);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+    }
     const blob = await response.blob();
     return new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
+      reader.onerror = (error) => {
+          console.error("FileReader error:", error);
+          reject(error);
+      };
       reader.readAsDataURL(blob);
     });
   } catch (error) {
@@ -134,6 +141,14 @@ export default function PatientsTable() {
     
     let yPos = currentY;
     doc.setFontSize(10);
+    
+    doc.setFont("helvetica", "bold");
+    doc.text("Bill Number:", docWidth - 60, yPos);
+    doc.setFont("helvetica", "normal");
+    doc.text(patient.billNumber, docWidth - 14, yPos, { align: 'right' });
+    yPos += 2;
+
+
     patientDetails.forEach(detail => {
         doc.setFont("helvetica", "bold");
         doc.text(detail.title, 14, yPos);
@@ -144,7 +159,7 @@ export default function PatientsTable() {
         yPos += (valueLines.length * 4) + 2;
     });
 
-    const sessionTableY = yPos > currentY + 20 ? yPos + 5 : currentY + 20;
+    let finalY = yPos > currentY + 20 ? yPos + 5 : currentY + 20;
 
     // Sort sessions and payments
     const sortedSessions = patient.sessions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -153,7 +168,7 @@ export default function PatientsTable() {
     // --- Session Dates Table ---
     if (sortedSessions && sortedSessions.length > 0) {
         autoTable(doc, {
-            startY: sessionTableY,
+            startY: finalY,
             head: [['#', 'Session Date']],
             body: sortedSessions.map((session, index) => [
                 index + 1,
@@ -171,14 +186,13 @@ export default function PatientsTable() {
             margin: { left: 130 },
             tableWidth: docWidth - 144,
         });
+        finalY = (doc as any).lastAutoTable.finalY;
     }
 
-    let finalY = (doc as any).lastAutoTable.finalY || yPos;
-    
-    finalY += 10;
 
     // --- Payment Table ---
     if (sortedPayments && sortedPayments.length > 0) {
+      finalY += 5; // Add some space
       autoTable(doc, {
         startY: finalY,
         head: [['#', 'Payment Date', 'Amount Paid']],
@@ -227,6 +241,31 @@ export default function PatientsTable() {
     doc.setTextColor("#d90429");
     doc.text("Balance Due:", 14, finalY);
     doc.text(`Rs. ${balanceDue.toFixed(2)}`, docWidth - 14, finalY, { align: 'right' });
+    
+    
+    // --- Footer Note ---
+    const pageHeight = doc.internal.pageSize.getHeight();
+    let footerY = pageHeight - 40;
+
+    // --- Seal & Sign ---
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont("helvetica", "normal");
+    const sealSignText = "Seal & Sign";
+    const sealSignWidth = doc.getTextWidth(sealSignText);
+    doc.text(sealSignText, docWidth - 14 - sealSignWidth, footerY - 5);
+
+
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.2);
+    doc.line(docWidth - 14 - sealSignWidth - 2, footerY, docWidth - 14, footerY);
+    
+    const note = "Note: All services are provided under the supervision of qualified medical professionals. Results may vary from person to person. We will do the best. Package treatment must be completed in given time period. (Package treatment fee will not be refunded under any circumstances.)\n© 2025 Dr. Movement Rx. All Rights Reserved";
+
+    doc.setFontSize(8);
+    doc.setTextColor(100);
+    const noteLines = doc.splitTextToSize(note, docWidth - 28);
+    doc.text(noteLines, docWidth / 2, footerY + 10, { align: 'center' });
 
 
     doc.save(`invoice-${patient.name.replace(/\s/g, '-')}-${patient.id}.pdf`);

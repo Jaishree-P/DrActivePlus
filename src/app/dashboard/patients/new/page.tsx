@@ -49,11 +49,20 @@ export default function NewPatientPage() {
         }
     });
 
+    const generateBillNumber = () => {
+        const currentYear = new Date().getFullYear();
+        const patientsFromThisYear = patients.filter(p => new Date(p.registrationDate).getFullYear() === currentYear);
+        const nextId = patientsFromThisYear.length + 1;
+        const paddedId = nextId.toString().padStart(3, '0');
+        return `${currentYear}${paddedId}`;
+    };
+
     const onSubmit: SubmitHandler<FormValues> = (data) => {
         const newPatient: Patient = {
             id: uuidv4(),
             email: "", // Not in form, but required by type
             ...data,
+            billNumber: generateBillNumber(),
             treatmentPlan: data.treatmentPlan || "",
             medicines: data.medicines || "",
             registrationDate: new Date().toISOString(),
