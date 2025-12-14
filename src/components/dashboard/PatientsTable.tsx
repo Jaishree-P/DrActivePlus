@@ -1,6 +1,7 @@
 
 
 
+
 "use client";
 
 import { useState } from "react";
@@ -45,6 +46,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { defaultPatients, contactInfo } from "@/lib/data";
+import { logoBase64 } from "@/lib/logo-base64";
 import { type Patient } from "@/lib/types";
 import { format, isValid, parseISO } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -74,7 +76,7 @@ export default function PatientsTable() {
     try {
       const doc = new jsPDF();
       const docWidth = doc.internal.pageSize.getWidth();
-      let yPos = 15;
+      let yPos = 20;
 
       const safeString = (str: any) => (str || '').toString();
       const safeNumber = (num: any) => {
@@ -89,40 +91,30 @@ export default function PatientsTable() {
       };
       
       // Header
+      if (logoBase64) {
+        doc.addImage(logoBase64, 'PNG', 14, 15, 10, 10);
+      }
       doc.setFontSize(22);
-      doc.setTextColor(220, 53, 69);
-      doc.text("Doctor Active Plus", docWidth / 2, yPos, { align: 'center'});
-      yPos += 7;
-
-      doc.setFontSize(10);
-      doc.setTextColor(13, 110, 253);
-      doc.text("HEALTHCARE", docWidth / 2, yPos, { align: 'center'});
-      yPos += 4;
-      doc.setDrawColor(13, 110, 253);
-      doc.setLineWidth(0.5);
-      doc.line(docWidth / 2 - 10, yPos, docWidth / 2 + 10, yPos);
-      yPos += 5;
-      
-      doc.setFontSize(12);
-      doc.setTextColor(0, 0, 0);
-      doc.text("PHYSIOTHERAPY & PAIN CLINIC", docWidth / 2, yPos, { align: 'center'});
+      doc.setTextColor(185, 28, 28);
+      doc.text("Doctor Active Plus", 28, yPos);
       yPos += 8;
 
-      doc.setFontSize(9);
-      const addressLines = doc.splitTextToSize(contactInfo.address, docWidth - 40);
-      doc.text(addressLines, docWidth / 2, yPos, { align: 'center' });
-      yPos += (addressLines.length * 4);
+      doc.setFontSize(10);
+      doc.setTextColor(100, 116, 139);
+      doc.text("PHYSIOTHERAPY & PAIN CLINIC", 14, yPos);
+      yPos += 5;
+      
+      const addressLines = doc.splitTextToSize(safeString(contactInfo.address), docWidth - 28);
+      doc.text(addressLines, 14, yPos);
+      yPos += (addressLines.length * 4) + 2;
 
-      doc.text(`Mobile: ${contactInfo.phone} | Email: ${contactInfo.email}`, docWidth / 2, yPos, { align: 'center' });
+      doc.text(`Mobile: ${safeString(contactInfo.phone)} | Email: ${safeString(contactInfo.email)}`, 14, yPos);
       yPos += 6;
 
       doc.setDrawColor(220, 53, 69);
+      doc.setLineWidth(0.5);
       doc.line(14, yPos, docWidth - 14, yPos);
-      yPos += 5;
-
-      doc.setTextColor(220, 53, 69);
-      doc.text("A unit of Speed Plus Health Initiatives | GSTIN: 29AOTPY4559F1ZX.", docWidth / 2, yPos, { align: 'center' });
-      yPos += 15;
+      yPos += 10;
 
 
       // Patient Details & Bill Info
@@ -132,7 +124,7 @@ export default function PatientsTable() {
       doc.text(`Bill Number: ${safeString(patient.billNumber)}`, docWidth - 14, yPos, { align: 'right' });
       yPos += 7;
       doc.text(`Date: ${safeDate(new Date())}`, 14, yPos);
-      yPos += 7;
+      yPos += 10;
 
       const patientDetailsStartY = yPos;
       
@@ -153,18 +145,20 @@ export default function PatientsTable() {
       
       // Session Table (parallel to patient details)
       const sessions = patient.sessions || [];
+      let sessionsTableFinalY = 0;
       if (sessions.length > 0) {
         autoTable(doc, {
           startY: patientDetailsStartY,
           head: [['#', 'Session Date']],
           body: sessions.map((s, i) => [i + 1, safeDate(s.date)]),
           theme: 'grid',
-          headStyles: { fillColor: [28, 158, 146] },
+          headStyles: { fillColor: [185, 28, 28] },
           margin: { left: 110 }
         });
+        sessionsTableFinalY = (doc as any).lastAutoTable.finalY || 0;
       }
       
-      let lastY = Math.max(patientDetailsEndY, (doc as any).lastAutoTable.finalY || 0) + 10;
+      let lastY = Math.max(patientDetailsEndY, sessionsTableFinalY) + 10;
       
       // Payments Table
       const payments = patient.payments || [];
@@ -174,7 +168,7 @@ export default function PatientsTable() {
           head: [['#', 'Payment Date', 'Amount Paid']],
           body: payments.map((p, i) => [i + 1, safeDate(p.date), `Rs. ${safeNumber(p.amount).toFixed(2)}`]),
           theme: 'grid',
-          headStyles: { fillColor: [28, 158, 146] },
+          headStyles: { fillColor: [185, 28, 28] },
           didDrawPage: (data) => {
             lastY = data.cursor?.y ?? lastY;
           },
@@ -189,23 +183,27 @@ export default function PatientsTable() {
       const balanceDue = totalBill - totalPaid;
       
       doc.setFontSize(10);
-      doc.text('Total Bill:', 14, lastY);
-      doc.text(`Rs. ${totalBill.toFixed(2)}`, docWidth - 14, lastY, { align: 'right' });
-      lastY += 7;
-      
-      doc.text('Total Paid:', 14, lastY);
-      doc.text(`Rs. ${totalPaid.toFixed(2)}`, docWidth - 14, lastY, { align: 'right' });
-      lastY += 7;
+      const totals = [
+        { label: 'Total Bill:', value: `Rs. ${totalBill.toFixed(2)}` },
+        { label: 'Total Paid:', value: `Rs. ${totalPaid.toFixed(2)}` },
+        { label: 'Balance Due:', value: `Rs. ${balanceDue.toFixed(2)}` }
+      ];
 
-      doc.setFont('helvetica', 'bold');
-      doc.text('Balance Due:', 14, lastY);
-      doc.text(`Rs. ${balanceDue.toFixed(2)}`, docWidth - 14, lastY, { align: 'right' });
-      lastY += 20;
+      autoTable(doc, {
+        startY: lastY,
+        body: totals,
+        theme: 'plain',
+        columnStyles: {
+            0: { fontStyle: 'bold' },
+            1: { halign: 'right' }
+        }
+      });
+      lastY = (doc as any).lastAutoTable.finalY + 20;
 
       // Footer
       const pageHeight = doc.internal.pageSize.getHeight();
-      let footerY = Math.max(lastY, pageHeight - 50);
-      if (footerY > pageHeight - 50) {
+      let footerY = Math.max(lastY, pageHeight - 60);
+      if (footerY > pageHeight - 60) {
         doc.addPage();
         footerY = 20;
       }
@@ -213,12 +211,12 @@ export default function PatientsTable() {
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       doc.text("Seal & Sign", docWidth - 14, footerY, { align: 'right' });
-      footerY += 10;
+      footerY += 15;
 
       const noteText = "Note: All services are provided under the supervision of qualified medical professionals. Results may vary from person to person. We will do the best. Package treatment must be completed in given time period. (Package treatment fee will not be refunded under any circumstances.) \n© 2025 Dr. Movement Rx. All Rights Reserved";
       const noteLines = doc.splitTextToSize(noteText, docWidth - 28);
       doc.setFontSize(8);
-      doc.text(noteLines, 14, footerY);
+      doc.text(noteLines, docWidth / 2, footerY, { align: 'center' });
 
 
       const dataUri = doc.output('datauristring');
@@ -229,7 +227,7 @@ export default function PatientsTable() {
       toast({
         variant: "destructive",
         title: "PDF Generation Failed",
-        description: "An unexpected error occurred. Please check the console for details.",
+        description: error instanceof Error ? error.message : "An unexpected error occurred. Please check the console for details.",
       });
     } finally {
       setIsGeneratingPdf(false);
@@ -354,5 +352,7 @@ export default function PatientsTable() {
 }
 
 
+
+    
 
     
