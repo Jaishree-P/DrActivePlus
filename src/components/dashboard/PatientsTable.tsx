@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -72,8 +73,7 @@ export default function PatientsTable() {
     try {
         const doc = new jsPDF();
         const docWidth = doc.internal.pageSize.getWidth();
-        let finalY = 0;
-        
+
         // --- Logo & Header ---
         doc.setFontSize(22);
         doc.setTextColor(217, 4, 41); // Red color for main title
@@ -92,7 +92,7 @@ export default function PatientsTable() {
         doc.text(clinicTitle, headerStartX + logoWidth + logoGap, 22);
 
         doc.setFontSize(10);
-        doc.setTextColor(0, 0, 0); // Black color
+        doc.setTextColor(0, 0, 0);
         doc.text("Advance Spine | Joint & Laser Center", docWidth / 2, 29, { align: "center" });
 
         const address = contactInfo?.address || '';
@@ -143,13 +143,13 @@ export default function PatientsTable() {
             yPos += (valueLines.length * 5) + 2;
         });
 
-        finalY = yPos;
+        let finalY = yPos;
 
         const sortedSessions = (patient?.sessions || []).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         const sortedPayments = (patient?.payments || []).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         
         // --- Session Dates Table ---
-        if (sortedSessions && sortedSessions.length > 0) {
+        if (sortedSessions.length > 0) {
             autoTable(doc, {
                 startY: finalY,
                 head: [['#', 'Session Date']],
@@ -172,7 +172,7 @@ export default function PatientsTable() {
         }
 
         // --- Payment Table ---
-        if (sortedPayments && sortedPayments.length > 0) {
+        if (sortedPayments.length > 0) {
           finalY = (doc as any).lastAutoTable ? Math.max(finalY, (doc as any).lastAutoTable.finalY + 5) : finalY + 5;
           autoTable(doc, {
             startY: finalY,
@@ -272,7 +272,7 @@ export default function PatientsTable() {
     
     const link = document.createElement('a');
     link.href = pdfPreview.dataUri;
-    link.download = `invoice-${patient.name.replace(/\s/g, '-')}-${patient.id}.pdf`;
+    link.download = `invoice-${patient.name.replace(/\s/g, '-')}-${patient.billNumber}.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -382,3 +382,5 @@ export default function PatientsTable() {
     </>
   );
 }
+
+    
