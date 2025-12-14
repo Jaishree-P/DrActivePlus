@@ -31,7 +31,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreHorizontal, Download, Edit, Trash, Eye } from "lucide-react";
+import { MoreHorizontal, Download, Trash, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -282,13 +282,10 @@ export default function PatientsTable() {
                           <DropdownMenuItem onClick={() => router.push(`/dashboard/patients/${patient.id}`)}>
                             <Eye className="mr-2 h-4 w-4" /> View
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => router.push(`/dashboard/patients/${patient.id}`)}>
-                            <Edit className="mr-2 h-4 w-4" /> Manage
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => handleDownloadBill(patient)}>
                             <Download className="mr-2 h-4 w-4" /> Download Bill
                           </DropdownMenuItem>
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem
                             className="text-destructive"
                             onClick={() => setPatientToDelete(patient)}
@@ -332,5 +329,3 @@ export default function PatientsTable() {
     </>
   );
 }
-
-    
