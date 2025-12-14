@@ -117,14 +117,15 @@ export default function PatientsTable() {
         doc.setFontSize(10);
         doc.setTextColor(0,0,0);
 
+        const patientName = patient?.name || "";
+        const billNumber = patient?.billNumber || "";
 
         doc.text("Patient Name:", 14, yPos);
-        const patientName = patient?.name || "";
         const patientNameLines = doc.splitTextToSize(patientName, docWidth - 14 - 55);
         doc.text(patientNameLines, 55, yPos);
         
         doc.text("Bill Number:", docWidth - 60, yPos);
-        doc.text(patient?.billNumber || "", docWidth - 14, yPos, { align: 'right' });
+        doc.text(billNumber, docWidth - 14, yPos, { align: 'right' });
         
         yPos += (patientNameLines.length * 5) + 2;
         
