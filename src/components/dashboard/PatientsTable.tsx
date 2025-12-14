@@ -147,10 +147,9 @@ export default function PatientsTable() {
 
         let finalY = yPos + 5;
 
-        // Sort sessions and payments safely
         const sortedSessions = patient.sessions ? [...patient.sessions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) : [];
         const sortedPayments = patient.payments ? [...patient.payments].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) : [];
-
+        
         // --- Session Dates Table ---
         if (sortedSessions && sortedSessions.length > 0) {
             autoTable(doc, {
@@ -177,7 +176,7 @@ export default function PatientsTable() {
 
         // --- Payment Table ---
         if (sortedPayments && sortedPayments.length > 0) {
-          finalY = Math.max(finalY, yPos) + 5; // Add some space
+          finalY = Math.max(finalY, yPos) + 5;
           autoTable(doc, {
             startY: finalY,
             head: [['#', 'Payment Date', 'Amount Paid']],
