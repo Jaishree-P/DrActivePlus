@@ -72,11 +72,11 @@ export default function PatientsTable() {
     try {
         const doc = new jsPDF();
         const docWidth = doc.internal.pageSize.getWidth();
+        let finalY = 0;
         
         // --- Logo & Header ---
         doc.setFontSize(22);
         doc.setTextColor(217, 4, 41); // Red color for main title
-        doc.setFont("helvetica", "bold");
 
         const clinicTitle = "DOCTOR ACTIVE PLUS";
         const titleWidth = doc.getTextWidth(clinicTitle);
@@ -93,7 +93,6 @@ export default function PatientsTable() {
 
         doc.setFontSize(10);
         doc.setTextColor(0, 0, 0); // Black color
-        doc.setFont("helvetica", "normal");
         doc.text("Advance Spine | Joint & Laser Center", docWidth / 2, 29, { align: "center" });
 
         const addressLines = doc.splitTextToSize(contactInfo.address, docWidth - 40);
@@ -115,16 +114,14 @@ export default function PatientsTable() {
         // --- Patient Details ---
         let yPos = currentY;
         doc.setFontSize(10);
+        doc.setTextColor(0,0,0);
 
-        doc.setFont("helvetica", "bold");
+
         doc.text("Patient Name:", 14, yPos);
-        doc.setFont("helvetica", "normal");
         const patientNameLines = doc.splitTextToSize(patient.name || "", docWidth - 14 - 55);
         doc.text(patientNameLines, 55, yPos);
         
-        doc.setFont("helvetica", "bold");
         doc.text("Bill Number:", docWidth - 60, yPos);
-        doc.setFont("helvetica", "normal");
         doc.text(patient.billNumber || "", docWidth - 14, yPos, { align: 'right' });
         
         yPos += (patientNameLines.length * 5) + 2;
@@ -137,15 +134,13 @@ export default function PatientsTable() {
         ];
         
         patientDetails.forEach(detail => {
-            doc.setFont("helvetica", "bold");
             doc.text(detail.title, 14, yPos);
-            doc.setFont("helvetica", "normal");
             const valueLines = doc.splitTextToSize(detail.value, docWidth - 55 - 14);
             doc.text(valueLines, 55, yPos);
             yPos += (valueLines.length * 5) + 2;
         });
 
-        let finalY = yPos;
+        finalY = yPos;
 
         const sortedSessions = patient.sessions ? [...patient.sessions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) : [];
         const sortedPayments = (patient.payments || []).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -163,21 +158,16 @@ export default function PatientsTable() {
                 headStyles: {
                     fillColor: "#d90429", // Red
                     textColor: 255,
-                    fontStyle: 'bold',
                 },
                 columnStyles: {
                     0: { cellWidth: 10 },
                 },
                 margin: { left: 14, right: 14 },
                 tableWidth: docWidth - 28,
-                didDrawPage: (data) => {
-                  finalY = data.cursor?.y || finalY;
-                },
-                autoPaging: 'text',
             });
             const lastTable = doc as any;
             if (lastTable.lastAutoTable) {
-              finalY = lastTable.lastAutoTable.finalY || finalY;
+              finalY = lastTable.lastAutoTable.finalY;
             }
         }
 
@@ -196,21 +186,16 @@ export default function PatientsTable() {
             headStyles: {
               fillColor: "#d90429", // Red
               textColor: 255,
-              fontStyle: 'bold',
             },
             columnStyles: {
               0: { cellWidth: 10 },
               2: { halign: 'right' }
             },
             margin: { left: 14, right: 14 },
-            didDrawPage: (data) => {
-                finalY = data.cursor?.y || finalY;
-            },
-            autoPaging: 'text',
           });
           const lastTable = doc as any;
           if (lastTable.lastAutoTable) {
-            finalY = lastTable.lastAutoTable.finalY || finalY;
+            finalY = lastTable.lastAutoTable.finalY;
           }
         }
 
@@ -230,7 +215,6 @@ export default function PatientsTable() {
         const balanceDue = totalBillAmount - totalPaid;
 
         doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
         doc.text('Total Bill:', 14, finalY);
         doc.text(`Rs. ${totalBillAmount.toFixed(2)}`, docWidth - 14, finalY, { align: 'right' });
 
@@ -261,7 +245,6 @@ export default function PatientsTable() {
 
         doc.setFontSize(10);
         doc.setTextColor(0, 0, 0);
-        doc.setFont("helvetica", "normal");
         const sealSignText = "Seal & Sign";
         const sealSignWidth = doc.getTextWidth(sealSignText);
         doc.text(sealSignText, docWidth - 14 - sealSignWidth, footerY - 5);
