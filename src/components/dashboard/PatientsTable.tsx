@@ -47,8 +47,6 @@ import { defaultPatients, contactInfo } from "@/lib/data";
 import { type Patient } from "@/lib/types";
 import { format, isValid, parseISO } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import { logoBase64 } from "@/lib/logo-base64";
-
 
 export default function PatientsTable() {
   const router = useRouter();
@@ -74,7 +72,7 @@ export default function PatientsTable() {
     try {
       const doc = new jsPDF();
       const docWidth = doc.internal.pageSize.getWidth();
-      let yPos = 15;
+      let yPos = 20;
 
       const safeString = (str: any) => (str || '').toString();
       const safeNumber = (num: any) => {
@@ -88,30 +86,19 @@ export default function PatientsTable() {
         return isValid(date) ? format(date, 'dd MMM yyyy') : "N/A";
       };
 
-      // Header with Logo
-      const logoWidth = 15;
-      const logoHeight = 15;
-      const clinicName = "Doctor Active Plus";
-      const clinicNameWidth = doc.getStringUnitWidth(clinicName) * doc.getFontSize() / doc.internal.scaleFactor;
-      const totalHeaderWidth = logoWidth + 5 + clinicNameWidth;
-      const headerStartX = (docWidth - totalHeaderWidth) / 2;
-
-      doc.addImage(logoBase64, 'PNG', headerStartX, yPos - (logoHeight / 2) - 1, logoWidth, logoHeight);
-      
+      // Header
       doc.setFontSize(22);
-      doc.setTextColor(185, 28, 28);
-      doc.text(clinicName, headerStartX + logoWidth + 5, yPos);
+      doc.setTextColor(185, 28, 28); // "red-700"
+      doc.text("Doctor Active Plus", docWidth / 2, yPos, { align: 'center' });
       yPos += 8;
 
       doc.setFontSize(10);
-      doc.setTextColor(100, 116, 139);
-      
-      const address = safeString(contactInfo.address);
-      doc.text(address, docWidth / 2, yPos, { align: 'center' });
+      doc.setTextColor(100, 116, 139); // "slate-500"
+      doc.text(safeString(contactInfo.address), docWidth / 2, yPos, { align: 'center' });
       yPos += 5;
       
       // Lines with GSTIN
-      doc.setDrawColor(220, 53, 69);
+      doc.setDrawColor(220, 53, 69); // "red-600"
       doc.setLineWidth(0.5);
       doc.line(14, yPos, docWidth - 14, yPos);
       yPos += 5;
@@ -135,17 +122,18 @@ export default function PatientsTable() {
       const patientDetailsStartY = yPos;
       
       const patientDetails = [
-        { title: "Age:", value: safeString(patient.age) },
-        { title: "Mobile:", value: safeString(patient.phone) },
-        { title: "Consultant Physio:", value: safeString(patient.consultantPhysio) },
-        { title: "Diagnosis:", value: safeString(patient.diagnosis) },
-        { title: "Treatment:", value: safeString(patient.treatmentPlan) }
+        `Age: ${safeString(patient.age)}`,
+        `Mobile: ${safeString(patient.phone)}`,
+        `Consultant Physio: ${safeString(patient.consultantPhysio)}`,
+        `Diagnosis: ${safeString(patient.diagnosis)}`,
       ];
+      
+      const treatmentLines = doc.splitTextToSize(`Treatment: ${safeString(patient.treatmentPlan)}`, (docWidth / 2) - 28);
+      const allDetails = [...patientDetails, ...treatmentLines];
 
-      patientDetails.forEach(detail => {
-        const lines = doc.splitTextToSize(`${detail.title} ${detail.value}`, 90);
-        doc.text(lines, 14, yPos);
-        yPos += lines.length * 7;
+      allDetails.forEach(detailLine => {
+        doc.text(detailLine, 14, yPos);
+        yPos += 7;
       });
       
       const patientDetailsEndY = yPos;
@@ -160,7 +148,7 @@ export default function PatientsTable() {
           body: sessions.map((s, i) => [i + 1, safeDate(s.date)]),
           theme: 'grid',
           headStyles: { fillColor: [185, 28, 28] },
-          margin: { left: 110 }
+          margin: { left: docWidth / 2 + 7 }
         });
         sessionsTableFinalY = (doc as any).lastAutoTable.finalY || 0;
       }
@@ -359,5 +347,3 @@ export default function PatientsTable() {
     </>
   );
 }
-
-    
