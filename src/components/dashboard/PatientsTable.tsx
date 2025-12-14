@@ -72,8 +72,104 @@ export default function PatientsTable() {
 
     try {
         const doc = new jsPDF();
+        const docWidth = doc.internal.pageSize.getWidth();
+        let yPos = 20;
+
+        // Header
+        doc.addImage(logoBase64, 'PNG', 14, 15, 20, 20);
+        doc.setFontSize(18);
+        doc.text("DOCTOR ACTIVE PLUS", 40, 22);
+        doc.setFontSize(10);
+        doc.text("Advance Spine | Joint & Laser Center", 40, 28);
         
-        doc.text("Hello World", 10, 10);
+        const address = contactInfo.address || '';
+        const addressLines = doc.splitTextToSize(address, docWidth - 40);
+        doc.text(addressLines, docWidth - 14, 20, { align: 'right' });
+        yPos = doc.getTextDimensions(addressLines).h + 22;
+
+        doc.text(`Phone: ${contactInfo.phone || ''}`, docWidth - 14, yPos, { align: 'right' });
+        doc.text(`Email: ${contactInfo.email || ''}`, docWidth - 14, yPos + 5, { align: 'right' });
+
+
+        // Bill Info
+        yPos += 15;
+        doc.setLineWidth(0.5);
+        doc.line(14, yPos, docWidth - 14, yPos);
+        yPos += 10;
+        
+        doc.setFontSize(12);
+        doc.text("INVOICE", docWidth / 2, yPos, { align: 'center'});
+        yPos += 10;
+
+        doc.text(`Patient Name: ${patient.name || ''}`, 14, yPos);
+        doc.text(`Bill No: ${patient.billNumber || ''}`, docWidth - 14, yPos, { align: 'right' });
+        yPos += 7;
+
+        const regDate = patient.registrationDate ? format(new Date(patient.registrationDate), 'PPP') : '';
+        doc.text(`Patient ID: ${patient.id.substring(0, 8)}`, 14, yPos);
+        doc.text(`Date: ${regDate}`, docWidth - 14, yPos, { align: 'right' });
+        yPos += 15;
+
+        // Tables
+        const sessions = patient.sessions || [];
+        if (sessions.length > 0) {
+            autoTable(doc, {
+                startY: yPos,
+                head: [['Session Date']],
+                body: sessions.map(s => [s.date ? format(new Date(s.date), 'PPP') : '']),
+                theme: 'grid',
+                headStyles: { fillColor: [22, 163, 74] },
+                didDrawPage: (data) => {
+                    yPos = data.cursor?.y ?? yPos;
+                }
+            });
+            yPos = (doc as any).lastAutoTable.finalY + 10;
+        }
+
+        const payments = patient.payments || [];
+        if (payments.length > 0) {
+             autoTable(doc, {
+                startY: yPos,
+                head: [['Payment Date', 'Amount (Rs.)']],
+                body: payments.map(p => [
+                    p.date ? format(new Date(p.date), 'PPP') : '',
+                    (p.amount || 0).toFixed(2)
+                ]),
+                theme: 'grid',
+                headStyles: { fillColor: [22, 163, 74] },
+                didDrawPage: (data) => {
+                    yPos = data.cursor?.y ?? yPos;
+                }
+            });
+            yPos = (doc as any).lastAutoTable.finalY + 10;
+        }
+
+        // Totals
+        const totalBill = Number(patient.totalBill) || 0;
+        const totalPaid = (patient.payments || []).reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
+        const balanceDue = totalBill - totalPaid;
+
+        doc.setFontSize(12);
+        const totalsX = docWidth / 2 > 100 ? docWidth / 2 : 100;
+        
+        doc.text('Total Bill:', totalsX, yPos);
+        doc.text(`Rs. ${totalBill.toFixed(2)}`, docWidth - 14, yPos, { align: 'right' });
+        yPos += 7;
+
+        doc.text('Total Paid:', totalsX, yPos);
+        doc.text(`Rs. ${totalPaid.toFixed(2)}`, docWidth - 14, yPos, { align: 'right' });
+        yPos += 7;
+        
+        doc.setFontSize(12);
+        doc.text('Balance Due:', totalsX, yPos);
+        doc.text(`Rs. ${balanceDue.toFixed(2)}`, docWidth - 14, yPos, { align: 'right' });
+
+        yPos += 15;
+        doc.line(14, yPos, docWidth - 14, yPos);
+        yPos += 10;
+        doc.setFontSize(10);
+        doc.text("Thank you for choosing Doctor Active Plus!", docWidth / 2, yPos, { align: 'center'});
+
         
         const dataUri = doc.output('datauristring');
         setPdfPreview({ dataUri, patient });
