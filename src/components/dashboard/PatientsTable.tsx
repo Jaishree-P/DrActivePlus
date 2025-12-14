@@ -86,7 +86,6 @@ export default function PatientsTable() {
   const handleDownloadBill = async (patient: Patient) => {
     const doc = new jsPDF();
     const docWidth = doc.internal.pageSize.getWidth();
-    let finalY = 0;
     
     // --- Logo & Header ---
     const logoBase64 = await fetchImageAsBase64('/logo.png');
@@ -160,7 +159,7 @@ export default function PatientsTable() {
         doc.text(valueLines, valueXPos, yPos - (valueLines.length * 4));
     });
 
-    finalY = yPos > currentY + 20 ? yPos + 5 : currentY + 20;
+    let finalY = yPos > currentY + 20 ? yPos + 5 : currentY + 20;
 
     // Sort sessions and payments
     const sortedSessions = patient.sessions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
