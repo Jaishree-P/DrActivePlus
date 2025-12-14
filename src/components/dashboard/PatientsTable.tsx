@@ -119,7 +119,7 @@ export default function PatientsTable() {
         doc.setFont("helvetica", "bold");
         doc.text("Patient Name:", 14, yPos);
         doc.setFont("helvetica", "normal");
-        const patientNameLines = doc.splitTextToSize(patient.name, docWidth - 14 - 55);
+        const patientNameLines = doc.splitTextToSize(patient.name || "", docWidth - 14 - 55);
         doc.text(patientNameLines, 55, yPos);
         
         doc.setFont("helvetica", "bold");
@@ -130,10 +130,10 @@ export default function PatientsTable() {
         yPos += (patientNameLines.length * 5) + 2;
         
         const patientDetails = [
-            { title: "Mobile:", value: patient.phone },
-            { title: "Consultant Physio:", value: patient.consultantPhysio },
-            { title: "Diagnosis:", value: patient.diagnosis },
-            { title: "Treatment:", value: patient.treatmentPlan },
+            { title: "Mobile:", value: patient.phone || "" },
+            { title: "Consultant Physio:", value: patient.consultantPhysio || "" },
+            { title: "Diagnosis:", value: patient.diagnosis || "" },
+            { title: "Treatment:", value: patient.treatmentPlan || "" },
         ];
         
         patientDetails.forEach(detail => {
@@ -374,5 +374,3 @@ export default function PatientsTable() {
     </>
   );
 }
-
-    
