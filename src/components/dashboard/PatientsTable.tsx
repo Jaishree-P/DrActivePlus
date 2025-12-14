@@ -168,8 +168,12 @@ export default function PatientsTable() {
                 columnStyles: {
                     0: { cellWidth: 10 },
                 },
-                margin: { left: 130 },
-                tableWidth: docWidth - 144,
+                margin: { left: 14, right: 14 },
+                tableWidth: docWidth - 28,
+                didDrawPage: (data) => {
+                  finalY = data.cursor?.y || finalY;
+                },
+                autoPaging: 'text',
             });
             const lastTable = doc as any;
             if (lastTable.lastAutoTable) {
@@ -199,6 +203,10 @@ export default function PatientsTable() {
               2: { halign: 'right' }
             },
             margin: { left: 14, right: 14 },
+            didDrawPage: (data) => {
+                finalY = data.cursor?.y || finalY;
+            },
+            autoPaging: 'text',
           });
           const lastTable = doc as any;
           if (lastTable.lastAutoTable) {
@@ -208,7 +216,17 @@ export default function PatientsTable() {
 
         // --- Totals ---
         finalY = Math.max(finalY, yPos);
+
+        const checkAndAddPage = (spaceNeeded: number) => {
+            if (finalY + spaceNeeded > doc.internal.pageSize.getHeight() - 30) { // 30 for footer margin
+                doc.addPage();
+                finalY = 20; // Reset Y position on new page
+            }
+        };
+
+        checkAndAddPage(40); // Space for totals
         finalY += 10;
+        
         const totalPaid = (patient.payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
         const totalBillAmount = Number(patient.totalBill) || 0;
         const balanceDue = totalBillAmount - totalPaid;
@@ -235,6 +253,13 @@ export default function PatientsTable() {
         
         const pageHeight = doc.internal.pageSize.getHeight();
         let footerY = pageHeight - 30;
+
+        // Make sure footer doesn't overlap content
+        if (finalY > footerY - 20) {
+            doc.addPage();
+            footerY = pageHeight - 30;
+        }
+
 
         doc.setFontSize(10);
         doc.setTextColor(0, 0, 0);
