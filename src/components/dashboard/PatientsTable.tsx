@@ -150,13 +150,13 @@ export default function PatientsTable() {
 
 
     patientDetails.forEach(detail => {
+        yPos += (doc.splitTextToSize(detail.value, docWidth - 55 - 14).length * 4) + 2;
         doc.setFont("helvetica", "bold");
-        doc.text(detail.title, 14, yPos);
+        doc.text(detail.title, 14, yPos - (doc.splitTextToSize(detail.value, docWidth - 55 - 14).length * 4));
         doc.setFont("helvetica", "normal");
         const valueXPos = 55;
         const valueLines = doc.splitTextToSize(detail.value, docWidth - valueXPos - 14);
-        doc.text(valueLines, valueXPos, yPos);
-        yPos += (valueLines.length * 4) + 2;
+        doc.text(valueLines, valueXPos, yPos - (valueLines.length * 4));
     });
 
     let finalY = yPos > currentY + 20 ? yPos + 5 : currentY + 20;
@@ -245,7 +245,7 @@ export default function PatientsTable() {
     
     // --- Footer Note ---
     const pageHeight = doc.internal.pageSize.getHeight();
-    let footerY = pageHeight - 40;
+    let footerY = pageHeight - 30;
 
     // --- Seal & Sign ---
     doc.setFontSize(10);
