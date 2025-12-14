@@ -1,5 +1,6 @@
 
 
+
 "use client";
 
 import { useState } from "react";
@@ -86,7 +87,7 @@ export default function PatientsTable() {
         const date = typeof dateStr === 'string' ? parseISO(dateStr) : new Date(dateStr);
         return isValid(date) ? format(date, 'dd MMM yyyy') : "N/A";
       };
-
+      
       // Header
       doc.setFontSize(22);
       doc.setTextColor(220, 53, 69);
@@ -127,15 +128,14 @@ export default function PatientsTable() {
       // Patient Details & Bill Info
       doc.setFontSize(12);
       doc.setTextColor(0, 0, 0);
-      doc.setFont('helvetica', 'bold');
-      doc.text("Patient Details", 14, yPos);
-      doc.setFont('helvetica', 'normal');
-      yPos += 7;
       doc.text(`Patient Name: ${safeString(patient.name)}`, 14, yPos);
       doc.text(`Bill Number: ${safeString(patient.billNumber)}`, docWidth - 14, yPos, { align: 'right' });
       yPos += 7;
       doc.text(`Date: ${safeDate(new Date())}`, 14, yPos);
       yPos += 7;
+
+      const patientDetailsStartY = yPos;
+      
       const patientDetails = [
         { title: "Age:", value: safeString(patient.age) },
         { title: "Mobile:", value: safeString(patient.phone) },
@@ -148,25 +148,23 @@ export default function PatientsTable() {
         doc.text(`${detail.title} ${detail.value}`, 14, yPos);
         yPos += 7;
       });
-      yPos += 5; // Extra space before tables
-
-      let lastY = yPos;
       
-      // Session Table
+      const patientDetailsEndY = yPos;
+      
+      // Session Table (parallel to patient details)
       const sessions = patient.sessions || [];
       if (sessions.length > 0) {
         autoTable(doc, {
-          startY: lastY,
+          startY: patientDetailsStartY,
           head: [['#', 'Session Date']],
           body: sessions.map((s, i) => [i + 1, safeDate(s.date)]),
           theme: 'grid',
           headStyles: { fillColor: [28, 158, 146] },
-          didDrawPage: (data) => {
-            lastY = data.cursor?.y ?? lastY;
-          }
+          margin: { left: 110 }
         });
-        lastY = (doc as any).lastAutoTable.finalY + 10;
       }
+      
+      let lastY = Math.max(patientDetailsEndY, (doc as any).lastAutoTable.finalY || 0) + 10;
       
       // Payments Table
       const payments = patient.payments || [];
@@ -202,6 +200,26 @@ export default function PatientsTable() {
       doc.setFont('helvetica', 'bold');
       doc.text('Balance Due:', 14, lastY);
       doc.text(`Rs. ${balanceDue.toFixed(2)}`, docWidth - 14, lastY, { align: 'right' });
+      lastY += 20;
+
+      // Footer
+      const pageHeight = doc.internal.pageSize.getHeight();
+      let footerY = Math.max(lastY, pageHeight - 50);
+      if (footerY > pageHeight - 50) {
+        doc.addPage();
+        footerY = 20;
+      }
+      
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text("Seal & Sign", docWidth - 14, footerY, { align: 'right' });
+      footerY += 10;
+
+      const noteText = "Note: All services are provided under the supervision of qualified medical professionals. Results may vary from person to person. We will do the best. Package treatment must be completed in given time period. (Package treatment fee will not be refunded under any circumstances.) \n© 2025 Dr. Movement Rx. All Rights Reserved";
+      const noteLines = doc.splitTextToSize(noteText, docWidth - 28);
+      doc.setFontSize(8);
+      doc.text(noteLines, 14, footerY);
+
 
       const dataUri = doc.output('datauristring');
       setPdfPreview({ dataUri, patient });
@@ -335,3 +353,6 @@ export default function PatientsTable() {
   );
 }
 
+
+
+    
