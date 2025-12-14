@@ -42,11 +42,10 @@ import { MoreHorizontal, Download, Trash, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import { defaultPatients, contactInfo } from "@/lib/data";
+import { defaultPatients } from "@/lib/data";
 import { type Patient } from "@/lib/types";
 import { format, isValid, parseISO } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import { logoBase64 } from "@/lib/logo-base64";
 
 export default function PatientsTable() {
   const router = useRouter();
@@ -78,18 +77,10 @@ export default function PatientsTable() {
       };
 
       // Header
-      const logoWidth = 12;
-      const logoHeight = 12;
       const clinicName = "Doctor Active Plus";
-      const clinicNameWidth = doc.getTextWidth(clinicName);
-      const totalHeaderWidth = logoWidth + 5 + clinicNameWidth;
-      const headerStartX = (docWidth - totalHeaderWidth) / 2;
-
-      doc.addImage(logoBase64, 'PNG', headerStartX, yPos - (logoHeight / 2) - 2, logoWidth, logoHeight);
-
       doc.setFontSize(22);
       doc.setTextColor(185, 28, 28); // "red-700"
-      doc.text(clinicName, headerStartX + logoWidth + 5, yPos, {});
+      doc.text(clinicName, docWidth / 2, yPos, { align: 'center' });
       yPos += 8;
 
       doc.setFontSize(10);
@@ -364,3 +355,5 @@ export default function PatientsTable() {
     </>
   );
 }
+
+    
