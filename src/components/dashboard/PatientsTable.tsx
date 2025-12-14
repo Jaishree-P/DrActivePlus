@@ -84,7 +84,11 @@ export default function PatientsTable() {
 
       doc.setFontSize(10);
       doc.setTextColor(100, 116, 139); // "slate-500"
-      doc.text(safeString(contactInfo.address), docWidth / 2, yPos, { align: 'center' });
+      const addressLine1 = "Above Bommanahalli Milk Producers' Cooperative Society, Bommanahalli Main Road,";
+      const addressLine2 = "Bommanahalli, Bengaluru – 560049, Karnataka";
+      doc.text(addressLine1, docWidth / 2, yPos, { align: 'center' });
+      yPos += 5;
+      doc.text(addressLine2, docWidth / 2, yPos, { align: 'center' });
       yPos += 5;
       
       // Lines with GSTIN
@@ -236,6 +240,16 @@ export default function PatientsTable() {
     document.body.removeChild(link);
     
     setPdfPreview(null);
+  };
+  
+  const handleDelete = (patientId: string) => {
+    if (!patientId) return;
+    setPatients(patients.filter((p) => p.id !== patientId));
+    toast({
+      title: "Patient Deleted",
+      description: "The patient record has been successfully removed.",
+    });
+    setPatientToDelete(null);
   };
 
   return (
