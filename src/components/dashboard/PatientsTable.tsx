@@ -147,9 +147,9 @@ export default function PatientsTable() {
 
         let finalY = yPos + 5;
 
-        // Sort sessions and payments
-        const sortedSessions = patient.sessions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-        const sortedPayments = (patient.payments || []).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        // Sort sessions and payments safely
+        const sortedSessions = patient.sessions ? [...patient.sessions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) : [];
+        const sortedPayments = patient.payments ? [...patient.payments].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) : [];
 
         // --- Session Dates Table ---
         if (sortedSessions && sortedSessions.length > 0) {
@@ -205,12 +205,12 @@ export default function PatientsTable() {
         finalY = Math.max(finalY, yPos);
         finalY += 10;
         const totalPaid = (patient.payments || []).reduce((sum, p) => sum + p.amount, 0);
-        const balanceDue = patient.totalBill - totalPaid;
+        const balanceDue = (patient.totalBill || 0) - totalPaid;
 
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
         doc.text('Total Bill:', 14, finalY);
-        doc.text(`Rs. ${patient.totalBill.toFixed(2)}`, docWidth - 14, finalY, { align: 'right' });
+        doc.text(`Rs. ${(patient.totalBill || 0).toFixed(2)}`, docWidth - 14, finalY, { align: 'right' });
 
         finalY += 7;
         doc.text('Total Paid:', 14, finalY);
