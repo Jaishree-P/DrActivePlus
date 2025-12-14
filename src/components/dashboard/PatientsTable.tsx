@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState } from "react";
@@ -87,13 +88,16 @@ export default function PatientsTable() {
             const clinicName = "Doctor Active Plus";
             const logoWidth = 15;
             const logoHeight = 15;
-            const clinicNameX = docWidth / 2;
-
-            doc.addImage(base64data, 'PNG', clinicNameX - logoWidth - 5, yPos - (logoHeight / 2) -2, logoWidth, logoHeight);
-
+            
             doc.setFontSize(22);
+            const clinicNameWidth = doc.getTextWidth(clinicName);
+            const totalHeaderWidth = clinicNameWidth + logoWidth + 5; // 5 is the gap
+            const headerStartX = (docWidth - totalHeaderWidth) / 2;
+
+            doc.addImage(base64data, 'PNG', headerStartX, yPos - (logoHeight / 2) -2, logoWidth, logoHeight);
+
             doc.setTextColor(185, 28, 28); // "red-700"
-            doc.text(clinicName, clinicNameX, yPos, { align: 'center' });
+            doc.text(clinicName, headerStartX + logoWidth + 5, yPos);
             yPos += 8;
 
             doc.setFontSize(10);
