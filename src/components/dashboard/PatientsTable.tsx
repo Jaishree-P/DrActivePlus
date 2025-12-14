@@ -125,7 +125,7 @@ export default function PatientsTable() {
         doc.setFont("helvetica", "bold");
         doc.text("Bill Number:", docWidth - 60, yPos);
         doc.setFont("helvetica", "normal");
-        doc.text(patient.billNumber, docWidth - 14, yPos, { align: 'right' });
+        doc.text(patient.billNumber || "", docWidth - 14, yPos, { align: 'right' });
         
         yPos += (patientNameLines.length * 5) + 2;
         
@@ -171,7 +171,10 @@ export default function PatientsTable() {
                 margin: { left: 130 },
                 tableWidth: docWidth - 144,
             });
-            finalY = (doc as any).lastAutoTable.finalY || finalY;
+            const lastTable = doc as any;
+            if (lastTable.lastAutoTable) {
+              finalY = lastTable.lastAutoTable.finalY || finalY;
+            }
         }
 
         // --- Payment Table ---
@@ -183,7 +186,7 @@ export default function PatientsTable() {
             body: sortedPayments.map((payment, index) => [
               index + 1,
               format(new Date(payment.date), "dd MMM yyyy"),
-              `Rs. ${payment.amount.toFixed(2)}`
+              `Rs. ${(Number(payment.amount) || 0).toFixed(2)}`
             ]),
             theme: 'grid',
             headStyles: {
@@ -197,19 +200,23 @@ export default function PatientsTable() {
             },
             margin: { left: 14, right: 14 },
           });
-          finalY = (doc as any).lastAutoTable.finalY || finalY;
+          const lastTable = doc as any;
+          if (lastTable.lastAutoTable) {
+            finalY = lastTable.lastAutoTable.finalY || finalY;
+          }
         }
 
         // --- Totals ---
         finalY = Math.max(finalY, yPos);
         finalY += 10;
-        const totalPaid = (patient.payments || []).reduce((sum, p) => sum + p.amount, 0);
-        const balanceDue = (patient.totalBill || 0) - totalPaid;
+        const totalPaid = (patient.payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+        const totalBillAmount = Number(patient.totalBill) || 0;
+        const balanceDue = totalBillAmount - totalPaid;
 
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
         doc.text('Total Bill:', 14, finalY);
-        doc.text(`Rs. ${(patient.totalBill || 0).toFixed(2)}`, docWidth - 14, finalY, { align: 'right' });
+        doc.text(`Rs. ${totalBillAmount.toFixed(2)}`, docWidth - 14, finalY, { align: 'right' });
 
         finalY += 7;
         doc.text('Total Paid:', 14, finalY);
