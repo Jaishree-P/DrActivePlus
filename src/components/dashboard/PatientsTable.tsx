@@ -5,6 +5,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import jsPDF from "jspdf";
+import autoTable from 'jspdf-autotable';
 import {
   Table,
   TableBody,
@@ -46,7 +47,6 @@ import { defaultPatients, contactInfo } from "@/lib/data";
 import { type Patient } from "@/lib/types";
 import { format, isValid, parseISO } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import { logoBase64 } from "@/lib/logo-base64";
 
 
 export default function PatientsTable() {
@@ -73,7 +73,7 @@ export default function PatientsTable() {
     try {
       const doc = new jsPDF();
       const docWidth = doc.internal.pageSize.getWidth();
-      let yPos = 20;
+      let yPos = 15;
 
       const safeString = (str: any) => (str || '').toString();
       const safeNumber = (num: any) => {
@@ -84,127 +84,128 @@ export default function PatientsTable() {
       const safeDate = (dateStr: any) => {
         if (!dateStr) return "N/A";
         const date = typeof dateStr === 'string' ? parseISO(dateStr) : new Date(dateStr);
-        return isValid(date) ? format(date, 'PPP') : "N/A";
+        return isValid(date) ? format(date, 'dd MMM yyyy') : "N/A";
       };
-      
-      const checkYPos = (increment = 10) => {
-        if (yPos + increment > 280) {
-          doc.addPage();
-          yPos = 20;
-        }
-      };
-      
+
       // Header
-      doc.setFontSize(18);
-      doc.text("DOCTOR ACTIVE PLUS", docWidth / 2, yPos, { align: 'center'});
+      doc.setFontSize(22);
+      doc.setTextColor(220, 53, 69); // Red
+      doc.text("Dr. Movement Rx", docWidth / 2, yPos, { align: 'center'});
       yPos += 7;
-      doc.setFontSize(10);
-      doc.text("Advance Spine | Joint & Laser Center", docWidth / 2, yPos, { align: 'center'});
-      yPos += 7;
-      
-      const address = safeString(contactInfo.address);
-      const addressLines = doc.splitTextToSize(address, docWidth - 40);
-      doc.text(addressLines, docWidth / 2, yPos, { align: 'center' });
-      yPos += (addressLines.length * 4) + 4;
-      
-      doc.text(`Phone: ${safeString(contactInfo.phone)} | Email: ${safeString(contactInfo.email)}`, docWidth / 2, yPos, { align: 'center' });
 
-      yPos += 10;
+      doc.setFontSize(10);
+      doc.setTextColor(13, 110, 253); // Blue
+      doc.text("HEALTHCARE", docWidth / 2, yPos, { align: 'center'});
+      yPos += 4;
+      doc.setDrawColor(13, 110, 253);
       doc.setLineWidth(0.5);
-      doc.line(14, yPos, docWidth - 14, yPos);
-      yPos += 10;
+      doc.line(docWidth / 2 - 10, yPos, docWidth / 2 + 10, yPos);
+      yPos += 5;
       
-      doc.setFontSize(14);
-      doc.text("INVOICE", docWidth / 2, yPos, { align: 'center'});
-      yPos += 10;
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0); // Black
+      doc.text("PHYSIOTHERAPY & PAIN CLINIC", docWidth / 2, yPos, { align: 'center'});
+      yPos += 8;
 
-      // Patient Info
-      doc.setFontSize(10);
-      doc.text(`Patient Name: ${safeString(patient.name)}`, 14, yPos);
-      doc.text(`Bill No: ${safeString(patient.billNumber)}`, docWidth - 14, yPos, { align: 'right' });
-      yPos += 7;
+      doc.setFontSize(9);
+      doc.text("Plot no 93 & 94, Lake View Enclave, Medahalli Kadugodi Road, Seegehalli,", docWidth / 2, yPos, { align: 'center' });
+      yPos += 4;
+      doc.text("Bengaluru, Karnataka - 560049.", docWidth / 2, yPos, { align: 'center' });
+      yPos += 4;
+      doc.text(`Mobile: +91 98446 67272 | Email: drmovementrx@gmail.com`, docWidth / 2, yPos, { align: 'center' });
+      yPos += 6;
 
-      doc.text(`Patient ID: ${(safeString(patient.id)).substring(0, 8)}`, 14, yPos);
-      doc.text(`Date: ${safeDate(patient.registrationDate)}`, docWidth - 14, yPos, { align: 'right' });
+      doc.setDrawColor(220, 53, 69); // Red
+      doc.line(14, yPos, docWidth - 14, yPos);
+      yPos += 5;
+
+      doc.setTextColor(220, 53, 69);
+      doc.text("A unit of Speed Plus Health Initiatives | GSTIN: 29AOTPY4559F1ZX.", docWidth / 2, yPos, { align: 'center' });
       yPos += 15;
 
+
+      // Patient Details
+      let patientDetailsY = yPos;
+      const patientDetails = [
+        { title: "Patient Name:", value: safeString(patient.name) },
+        { title: "Age:", value: safeString(patient.age) },
+        { title: "Mobile:", value: safeString(patient.phone) },
+        { title: "Consultant Physio:", value: safeString(patient.consultantPhysio) },
+        { title: "Diagnosis:", value: safeString(patient.diagnosis) },
+        { title: "Treatment:", value: safeString(patient.treatmentPlan) }
+      ];
+
+      doc.setFont("helvetica", "bold");
+      patientDetails.forEach(detail => {
+        doc.text(detail.title, 14, patientDetailsY);
+        doc.setFont("helvetica", "normal");
+        const valueLines = doc.splitTextToSize(detail.value, 80);
+        doc.text(valueLines, 55, patientDetailsY);
+        patientDetailsY += (valueLines.length > 1 ? valueLines.length * 5 : 7);
+        doc.setFont("helvetica", "bold");
+      });
+      doc.setFont("helvetica", "normal");
+
+
+      // Session Table
       const sessions = patient.sessions || [];
       if (sessions.length > 0) {
-        checkYPos(20);
-        doc.setFontSize(12);
-        doc.text('Session Attendance', 14, yPos);
-        yPos += 8;
-        
-        doc.setFontSize(10);
-        doc.setLineWidth(0.2);
-        doc.line(14, yPos, docWidth - 14, yPos);
-        yPos += 6;
-        doc.text('Session Date', 16, yPos);
-        yPos += 2;
-        doc.line(14, yPos, docWidth - 14, yPos);
-        yPos += 6;
-
-        sessions.forEach(s => {
-          checkYPos();
-          doc.text(safeDate(s.date), 16, yPos);
-          yPos += 7;
+        autoTable(doc, {
+          startY: yPos,
+          margin: { left: 110 },
+          head: [['#', 'Session Date']],
+          body: sessions.map((s, i) => [i + 1, safeDate(s.date)]),
+          theme: 'grid',
+          headStyles: {
+            fillColor: [28, 158, 146], // Teal Green
+            textColor: 255
+          },
+          styles: { fontSize: 9 },
+          columnStyles: { 0: { cellWidth: 10 } }
         });
-        yPos += 5;
       }
       
-      const payments = patient.payments || [];
-      if (payments.length > 0) {
-        checkYPos(20);
-        doc.setFontSize(12);
-        doc.text('Payment History', 14, yPos);
-        yPos += 8;
+      const finalY = (doc as any).lastAutoTable.finalY || patientDetailsY;
 
-        doc.setFontSize(10);
-        doc.setLineWidth(0.2);
-        doc.line(14, yPos, docWidth - 14, yPos);
-        yPos += 6;
-        doc.text('Payment Date', 16, yPos);
-        doc.text('Amount (Rs.)', docWidth - 16, yPos, {align: 'right'});
-        yPos += 2;
-        doc.line(14, yPos, docWidth - 14, yPos);
-        yPos += 6;
-
-        payments.forEach(p => {
-          checkYPos();
-          doc.text(safeDate(p.date), 16, yPos);
-          doc.text(safeNumber(p.amount).toFixed(2), docWidth - 16, yPos, {align: 'right'});
-          yPos += 7;
-        });
-        yPos += 5;
+      // Payments Table
+      let paymentY = finalY + 15;
+      if (patientDetailsY > finalY) {
+        paymentY = patientDetailsY + 15;
       }
 
-      checkYPos(40);
+      const payments = patient.payments || [];
+      if (payments.length > 0) {
+        autoTable(doc, {
+          startY: paymentY,
+          margin: { left: 14, right: 14 },
+          head: [['#', 'Payment Date', 'Amount Paid']],
+          body: payments.map((p, i) => [i + 1, safeDate(p.date), `Rs. ${safeNumber(p.amount).toFixed(2)}`]),
+          theme: 'grid',
+          headStyles: {
+            fillColor: [28, 158, 146], // Teal Green
+            textColor: 255
+          },
+          styles: { fontSize: 9 },
+          columnStyles: { 
+            0: { cellWidth: 10, halign: 'center' },
+            2: { halign: 'right' }
+          }
+        });
+      }
 
+      const paymentFinalY = (doc as any).lastAutoTable.finalY || paymentY;
+      
+      // Balance Due
       const totalBill = safeNumber(patient.totalBill);
       const totalPaid = (patient.payments || []).reduce((acc, p) => acc + safeNumber(p.amount), 0);
       const balanceDue = totalBill - totalPaid;
-
-      yPos += 10;
-      doc.setFontSize(12);
-      const totalsX = docWidth / 2 > 100 ? docWidth / 2 : 100;
       
-      doc.text('Total Bill:', totalsX, yPos);
-      doc.text(`Rs. ${totalBill.toFixed(2)}`, docWidth - 14, yPos, { align: 'right' });
-      yPos += 7;
-
-      doc.text('Total Paid:', totalsX, yPos);
-      doc.text(`Rs. ${totalPaid.toFixed(2)}`, docWidth - 14, yPos, { align: 'right' });
-      yPos += 7;
-      
-      doc.setFontSize(12);
-      doc.text('Balance Due:', totalsX, yPos);
-      doc.text(`Rs. ${balanceDue.toFixed(2)}`, docWidth - 14, yPos, { align: 'right' });
-
-      yPos += 15;
-      doc.line(14, yPos, docWidth - 14, yPos);
-      yPos += 10;
+      const balanceY = paymentFinalY + 10;
       doc.setFontSize(10);
-      doc.text("Thank you for choosing Doctor Active Plus!", docWidth / 2, yPos, { align: 'center'});
+      doc.setTextColor(0, 128, 0); // Green
+      doc.setFont("helvetica", "bold");
+      doc.text('Balance Due:', 14, balanceY);
+      doc.text(`Rs. ${balanceDue.toFixed(2)}`, 55, balanceY);
 
       const dataUri = doc.output('datauristring');
       setPdfPreview({ dataUri, patient });
@@ -337,5 +338,3 @@ export default function PatientsTable() {
     </>
   );
 }
-
-    
