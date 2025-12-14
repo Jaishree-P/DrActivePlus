@@ -55,168 +55,182 @@ export default function PatientsTable() {
   const [pdfPreview, setPdfPreview] = useState<{dataUri: string, patient: Patient} | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
-  const handleDownloadBill = (patient: Patient) => {
+  const handleDownloadBill = async (patient: Patient) => {
     if (isGeneratingPdf) return;
     setIsGeneratingPdf(true);
 
     try {
-      const doc = new jsPDF();
-      const docWidth = doc.internal.pageSize.getWidth();
-      let yPos = 20;
+        const response = await fetch('/logo.png');
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = () => {
+            const base64data = reader.result as string;
 
-      const safeString = (str: any) => (str || '').toString();
-      const safeNumber = (num: any) => {
-          const number = Number(num);
-          return isNaN(number) ? 0 : number;
-      };
-      
-      const safeDate = (dateStr: any) => {
-        if (!dateStr) return "N/A";
-        const date = typeof dateStr === 'string' ? parseISO(dateStr) : new Date(dateStr);
-        return isValid(date) ? format(date, 'dd MMM yyyy') : "N/A";
-      };
+            const doc = new jsPDF();
+            const docWidth = doc.internal.pageSize.getWidth();
+            let yPos = 20;
 
-      // Header
-      const clinicName = "Doctor Active Plus";
-      doc.setFontSize(22);
-      doc.setTextColor(185, 28, 28); // "red-700"
-      doc.text(clinicName, docWidth / 2, yPos, { align: 'center' });
-      yPos += 8;
+            const safeString = (str: any) => (str || '').toString();
+            const safeNumber = (num: any) => {
+                const number = Number(num);
+                return isNaN(number) ? 0 : number;
+            };
+            
+            const safeDate = (dateStr: any) => {
+                if (!dateStr) return "N/A";
+                const date = typeof dateStr === 'string' ? parseISO(dateStr) : new Date(dateStr);
+                return isValid(date) ? format(date, 'dd MMM yyyy') : "N/A";
+            };
 
-      doc.setFontSize(10);
-      doc.setTextColor(100, 116, 139); // "slate-500"
-      const addressLine1 = "Above Bommanahalli Milk Producers' Cooperative Society, Bommanahalli Main Road,";
-      const addressLine2 = "Bommanahalli, Bengaluru – 560049, Karnataka";
-      doc.text(addressLine1, docWidth / 2, yPos, { align: 'center' });
-      yPos += 5;
-      doc.text(addressLine2, docWidth / 2, yPos, { align: 'center' });
-      yPos += 5;
-      
-      // Lines with GSTIN
-      doc.setDrawColor(220, 53, 69); // "red-600"
-      doc.setLineWidth(0.5);
-      doc.line(14, yPos, docWidth - 14, yPos);
-      yPos += 5;
-      
-      const gstinText = "A unit of Speed Plus Health Initiatives | GSTIN: 29AOTPY4559F1ZX.";
-      doc.setFontSize(8);
-      doc.setTextColor(100, 116, 139);
-      doc.text(gstinText, docWidth/2, yPos, { align: 'center'});
-      yPos += 3;
+            // Header
+            const clinicName = "Doctor Active Plus";
+            const logoWidth = 15;
+            const logoHeight = 15;
+            const clinicNameX = docWidth / 2;
 
-      doc.line(14, yPos, docWidth - 14, yPos);
-      yPos += 10;
-      
-      // Patient Details & Bill Info
-      doc.setFontSize(12);
-      doc.setTextColor(0, 0, 0);
-      doc.text(`Patient Name: ${safeString(patient.name)}`, 14, yPos);
-      doc.text(`Bill Number: ${safeString(patient.billNumber)}`, docWidth - 14, yPos, { align: 'right' });
-      yPos += 7;
+            doc.addImage(base64data, 'PNG', clinicNameX - logoWidth - 5, yPos - (logoHeight / 2) -2, logoWidth, logoHeight);
 
-      const patientDetailsStartY = yPos;
-      
-      const patientDetails = [
-        `Age: ${safeString(patient.age)}`,
-        `Mobile: ${safeString(patient.phone)}`,
-        `Consultant Physio: ${safeString(patient.consultantPhysio)}`,
-        `Diagnosis: ${safeString(patient.diagnosis)}`,
-      ];
-      
-      patientDetails.forEach(detailLine => {
-        doc.text(detailLine, 14, yPos);
-        yPos += 7;
-      });
+            doc.setFontSize(22);
+            doc.setTextColor(185, 28, 28); // "red-700"
+            doc.text(clinicName, clinicNameX, yPos, { align: 'center' });
+            yPos += 8;
 
-      const treatmentLines = doc.splitTextToSize(`Treatment: ${safeString(patient.treatmentPlan)}`, (docWidth / 2) - 28);
-      treatmentLines.forEach((line: string) => {
-          doc.text(line, 14, yPos);
-          yPos += 7;
-      });
-      
-      const patientDetailsEndY = yPos;
-      
-      // Session Table (parallel to patient details)
-      const sessions = patient.sessions || [];
-      let sessionsTableFinalY = 0;
-      if (sessions.length > 0) {
-        autoTable(doc, {
-          startY: patientDetailsStartY,
-          head: [['#', 'Session Date']],
-          body: sessions.map((s, i) => [i + 1, safeDate(s.date)]),
-          theme: 'grid',
-          headStyles: { fillColor: [185, 28, 28] },
-          margin: { left: docWidth / 2 + 7 }
-        });
-        sessionsTableFinalY = (doc as any).lastAutoTable.finalY || 0;
-      }
-      
-      let lastY = Math.max(patientDetailsEndY, sessionsTableFinalY) + 10;
-      
-      // Payments Table
-      const payments = patient.payments || [];
-      if (payments.length > 0) {
-        autoTable(doc, {
-          startY: lastY,
-          head: [['#', 'Payment Date', 'Amount Paid']],
-          body: payments.map((p, i) => [i + 1, safeDate(p.date), `Rs. ${safeNumber(p.amount).toFixed(2)}`]),
-          theme: 'grid',
-          headStyles: { fillColor: [185, 28, 28] },
-          didDrawPage: (data) => {
-            lastY = data.cursor?.y ?? lastY;
-          },
-          columnStyles: { 2: { halign: 'right' } }
-        });
-        lastY = (doc as any).lastAutoTable.finalY + 10;
-      }
+            doc.setFontSize(10);
+            doc.setTextColor(100, 116, 139); // "slate-500"
+            const addressLine1 = "Above Bommanahalli Milk Producers' Cooperative Society, Bommanahalli Main Road,";
+            const addressLine2 = "Bommanahalli, Bengaluru – 560049, Karnataka";
+            doc.text(addressLine1, docWidth / 2, yPos, { align: 'center' });
+            yPos += 5;
+            doc.text(addressLine2, docWidth / 2, yPos, { align: 'center' });
+            yPos += 5;
+            
+            // Lines with GSTIN
+            doc.setDrawColor(220, 53, 69); // "red-600"
+            doc.setLineWidth(0.5);
+            doc.line(14, yPos, docWidth - 14, yPos);
+            yPos += 5;
+            
+            const gstinText = "A unit of Speed Plus Health Initiatives | GSTIN: 29AOTPY4559F1ZX.";
+            doc.setFontSize(8);
+            doc.setTextColor(100, 116, 139);
+            doc.text(gstinText, docWidth/2, yPos, { align: 'center'});
+            yPos += 3;
 
-      // Totals
-      const totalBill = safeNumber(patient.totalBill);
-      const totalPaid = (patient.payments || []).reduce((acc, p) => acc + safeNumber(p.amount), 0);
-      const balanceDue = totalBill - totalPaid;
-      
-      doc.setFontSize(10);
-      const totals = [
-        { label: 'Total Bill:', value: `Rs. ${totalBill.toFixed(2)}` },
-        { label: 'Total Paid:', value: `Rs. ${totalPaid.toFixed(2)}` },
-        { label: 'Balance Due:', value: `Rs. ${balanceDue.toFixed(2)}` }
-      ];
+            doc.line(14, yPos, docWidth - 14, yPos);
+            yPos += 10;
+            
+            // Patient Details & Bill Info
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`Patient Name: ${safeString(patient.name)}`, 14, yPos);
+            doc.text(`Bill Number: ${safeString(patient.billNumber)}`, docWidth - 14, yPos, { align: 'right' });
+            yPos += 7;
 
-      autoTable(doc, {
-        startY: lastY,
-        body: totals,
-        theme: 'plain',
-        columnStyles: {
-            0: { fontStyle: 'bold' },
-            1: { halign: 'right' }
-        }
-      });
-      lastY = (doc as any).lastAutoTable.finalY + 20;
+            const patientDetailsStartY = yPos;
+            
+            const patientDetails = [
+              `Age: ${safeString(patient.age)}`,
+              `Mobile: ${safeString(patient.phone)}`,
+              `Consultant Physio: ${safeString(patient.consultantPhysio)}`,
+              `Diagnosis: ${safeString(patient.diagnosis)}`,
+            ];
+            
+            patientDetails.forEach(detailLine => {
+              doc.text(detailLine, 14, yPos);
+              yPos += 7;
+            });
 
-      // Footer
-      const pageHeight = doc.internal.pageSize.getHeight();
-      let footerY = pageHeight - 40; // Position footer from bottom
-      if (lastY > footerY) {
-         footerY = lastY + 10;
-         if (footerY > pageHeight - 40) {
-            doc.addPage();
-            footerY = 20;
-         }
-      }
-      
-      doc.setFontSize(10);
-      doc.text("Seal & Sign", docWidth - 14, footerY, { align: 'right' });
-      footerY += 15;
+            const treatmentLines = doc.splitTextToSize(`Treatment: ${safeString(patient.treatmentPlan)}`, (docWidth / 2) - 28);
+            treatmentLines.forEach((line: string) => {
+                doc.text(line, 14, yPos);
+                yPos += 7;
+            });
+            
+            const patientDetailsEndY = yPos;
+            
+            // Session Table (parallel to patient details)
+            const sessions = patient.sessions || [];
+            let sessionsTableFinalY = 0;
+            if (sessions.length > 0) {
+              autoTable(doc, {
+                startY: patientDetailsStartY,
+                head: [['#', 'Session Date']],
+                body: sessions.map((s, i) => [i + 1, safeDate(s.date)]),
+                theme: 'grid',
+                headStyles: { fillColor: [185, 28, 28] },
+                margin: { left: docWidth / 2 + 7 }
+              });
+              sessionsTableFinalY = (doc as any).lastAutoTable.finalY || 0;
+            }
+            
+            let lastY = Math.max(patientDetailsEndY, sessionsTableFinalY) + 10;
+            
+            // Payments Table
+            const payments = patient.payments || [];
+            if (payments.length > 0) {
+              autoTable(doc, {
+                startY: lastY,
+                head: [['#', 'Payment Date', 'Amount Paid']],
+                body: payments.map((p, i) => [i + 1, safeDate(p.date), `Rs. ${safeNumber(p.amount).toFixed(2)}`]),
+                theme: 'grid',
+                headStyles: { fillColor: [185, 28, 28] },
+                didDrawPage: (data) => {
+                  lastY = data.cursor?.y ?? lastY;
+                },
+                columnStyles: { 2: { halign: 'right' } }
+              });
+              lastY = (doc as any).lastAutoTable.finalY + 10;
+            }
 
-      const noteText = "Note: All services are provided under the supervision of qualified medical professionals. Results may vary from person to person. We will do the best. Package treatment must be completed in given time period. (Package treatment fee will not be refunded under any circumstances.) \n© 2025 Dr. Movement Rx. All Rights Reserved";
-      const noteLines = doc.splitTextToSize(noteText, docWidth - 28);
-      doc.setFontSize(8);
-      doc.text(noteLines, docWidth / 2, footerY, { align: 'center' });
+            // Totals
+            const totalBill = safeNumber(patient.totalBill);
+            const totalPaid = (patient.payments || []).reduce((acc, p) => acc + safeNumber(p.amount), 0);
+            const balanceDue = totalBill - totalPaid;
+            
+            doc.setFontSize(10);
+            const totals = [
+              { label: 'Total Bill:', value: `Rs. ${totalBill.toFixed(2)}` },
+              { label: 'Total Paid:', value: `Rs. ${totalPaid.toFixed(2)}` },
+              { label: 'Balance Due:', value: `Rs. ${balanceDue.toFixed(2)}` }
+            ];
+
+            autoTable(doc, {
+              startY: lastY,
+              body: totals,
+              theme: 'plain',
+              columnStyles: {
+                  0: { fontStyle: 'bold' },
+                  1: { halign: 'right' }
+              }
+            });
+            lastY = (doc as any).lastAutoTable.finalY + 20;
+
+            // Footer
+            const pageHeight = doc.internal.pageSize.getHeight();
+            let footerY = pageHeight - 40; // Position footer from bottom
+            if (lastY > footerY) {
+               footerY = lastY + 10;
+               if (footerY > pageHeight - 40) {
+                  doc.addPage();
+                  footerY = 20;
+               }
+            }
+            
+            doc.setFontSize(10);
+            doc.text("Seal & Sign", docWidth - 14, footerY, { align: 'right' });
+            footerY += 15;
+
+            const noteText = "Note: All services are provided under the supervision of qualified medical professionals. Results may vary from person to person. We will do the best. Package treatment must be completed in given time period. (Package treatment fee will not be refunded under any circumstances.) \n© 2025 Dr. Movement Rx. All Rights Reserved";
+            const noteLines = doc.splitTextToSize(noteText, docWidth - 28);
+            doc.setFontSize(8);
+            doc.text(noteLines, docWidth / 2, footerY, { align: 'center' });
 
 
-      const dataUri = doc.output('datauristring');
-      setPdfPreview({ dataUri, patient });
-
+            const dataUri = doc.output('datauristring');
+            setPdfPreview({ dataUri, patient });
+            setIsGeneratingPdf(false);
+        };
     } catch (error) {
       console.error("Failed to generate PDF:", error);
       toast({
@@ -224,7 +238,6 @@ export default function PatientsTable() {
         title: "PDF Generation Failed",
         description: error instanceof Error ? error.message : "An unexpected error occurred. Please check the console for details.",
       });
-    } finally {
       setIsGeneratingPdf(false);
     }
   };
@@ -355,5 +368,7 @@ export default function PatientsTable() {
     </>
   );
 }
+
+    
 
     
