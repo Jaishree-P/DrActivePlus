@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState } from "react";
@@ -75,7 +76,11 @@ export default function PatientsTable() {
       let yPos = 20;
 
       const safeString = (str: any) => (str || '').toString();
-      const safeNumber = (num: any) => Number(num) || 0;
+      const safeNumber = (num: any) => {
+          const number = Number(num);
+          return isNaN(number) ? 0 : number;
+      };
+      
       const safeDate = (dateStr: any) => {
         if (!dateStr) return "N/A";
         const date = typeof dateStr === 'string' ? parseISO(dateStr) : new Date(dateStr);
@@ -90,21 +95,21 @@ export default function PatientsTable() {
       };
       
       // Header
-      doc.addImage(logoBase64, 'PNG', 14, 15, 20, 20);
       doc.setFontSize(18);
-      doc.text("DOCTOR ACTIVE PLUS", 40, 22);
+      doc.text("DOCTOR ACTIVE PLUS", docWidth / 2, yPos, { align: 'center'});
+      yPos += 7;
       doc.setFontSize(10);
-      doc.text("Advance Spine | Joint & Laser Center", 40, 28);
+      doc.text("Advance Spine | Joint & Laser Center", docWidth / 2, yPos, { align: 'center'});
+      yPos += 7;
       
       const address = safeString(contactInfo.address);
-      const addressLines = doc.splitTextToSize(address, docWidth - 100);
-      doc.text(addressLines, docWidth - 14, 20, { align: 'right' });
-      yPos = doc.getTextDimensions(addressLines).h + 22;
+      const addressLines = doc.splitTextToSize(address, docWidth - 40);
+      doc.text(addressLines, docWidth / 2, yPos, { align: 'center' });
+      yPos += (addressLines.length * 4) + 4;
+      
+      doc.text(`Phone: ${safeString(contactInfo.phone)} | Email: ${safeString(contactInfo.email)}`, docWidth / 2, yPos, { align: 'center' });
 
-      doc.text(`Phone: ${safeString(contactInfo.phone)}`, docWidth - 14, yPos, { align: 'right' });
-      doc.text(`Email: ${safeString(contactInfo.email)}`, docWidth - 14, yPos + 5, { align: 'right' });
-
-      yPos += 15;
+      yPos += 10;
       doc.setLineWidth(0.5);
       doc.line(14, yPos, docWidth - 14, yPos);
       yPos += 10;
