@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 function getStorageValue<T>(key: string, defaultValue: T): T {
-  // getting stored value
   if (typeof window !== "undefined") {
     const saved = localStorage.getItem(key);
-    if (saved !== null) {
+    if (saved !== null && saved !== 'undefined') {
       try {
         return JSON.parse(saved);
       } catch (error) {
@@ -18,19 +17,27 @@ function getStorageValue<T>(key: string, defaultValue: T): T {
   return defaultValue;
 }
 
-export const useLocalStorage = <T,>(key: string, defaultValue: T): [T, React.Dispatch<React.SetStateAction<T>>] => {
-  const [value, setValue] = useState<T>(() => {
-    return getStorageValue(key, defaultValue);
-  });
+export const useLocalStorage = <T,>(key: string, defaultValue: T): [T, (value: T | ((val: T) => T)) => void] => {
+  const [value, setValue] = useState<T>(defaultValue);
 
   useEffect(() => {
-    // storing value
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch (error) {
-      console.error("Error setting item to localStorage", error);
-    }
-  }, [key, value]);
+    setValue(getStorageValue(key, defaultValue));
+  }, [key, defaultValue]);
 
-  return [value, setValue];
+  const setStoredValue = useCallback(
+    (newValue: T | ((val: T) => T)) => {
+      try {
+        const valueToStore = newValue instanceof Function ? newValue(value) : newValue;
+        setValue(valueToStore);
+        if (typeof window !== "undefined") {
+          localStorage.setItem(key, JSON.stringify(valueToStore));
+        }
+      } catch (error) {
+        console.error("Error setting item to localStorage", error);
+      }
+    },
+    [key, value]
+  );
+
+  return [value, setStoredValue];
 };
