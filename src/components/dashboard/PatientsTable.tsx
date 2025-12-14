@@ -18,7 +18,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -31,6 +30,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { MoreHorizontal, Download, Trash, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
@@ -47,6 +53,7 @@ export default function PatientsTable() {
   const { toast } = useToast();
   const [patients, setPatients] = useLocalStorage<Patient[]>("patients", defaultPatients);
   const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null);
+  const [pdfPreview, setPdfPreview] = useState<{dataUri: string, patient: Patient} | null>(null);
 
   const handleDelete = (patientId: string) => {
     setPatients(patients.filter((p) => p.id !== patientId));
@@ -191,6 +198,7 @@ export default function PatientsTable() {
 
 
     // --- Totals ---
+    finalY = Math.max(finalY, yPos);
     finalY += 10;
     const totalPaid = (patient.payments || []).reduce((sum, p) => sum + p.amount, 0);
     const balanceDue = patient.totalBill - totalPaid;
@@ -216,32 +224,39 @@ export default function PatientsTable() {
     doc.text(`Rs. ${balanceDue.toFixed(2)}`, docWidth - 14, finalY, { align: 'right' });
     
     
-    // --- Footer Note ---
     const pageHeight = doc.internal.pageSize.getHeight();
     let footerY = pageHeight - 30;
 
-    // --- Seal & Sign ---
     doc.setFontSize(10);
     doc.setTextColor(0, 0, 0);
     doc.setFont("helvetica", "normal");
     const sealSignText = "Seal & Sign";
     const sealSignWidth = doc.getTextWidth(sealSignText);
     doc.text(sealSignText, docWidth - 14 - sealSignWidth, footerY - 5);
-
-
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.2);
-    doc.line(docWidth - 14 - sealSignWidth - 2, footerY, docWidth - 14, footerY);
     
     const note = "Note: All services are provided under the supervision of qualified medical professionals. Results may vary from person to person. We will do the best. Package treatment must be completed in given time period. (Package treatment fee will not be refunded under any circumstances.)\n© 2025 Dr. Movement Rx. All Rights Reserved";
 
     doc.setFontSize(8);
     doc.setTextColor(100);
     const noteLines = doc.splitTextToSize(note, docWidth - 28);
-    doc.text(noteLines, docWidth / 2, footerY + 10, { align: 'center' });
-
-
-    doc.save(`invoice-${patient.name.replace(/\s/g, '-')}-${patient.id}.pdf`);
+    doc.text(noteLines, docWidth / 2, footerY + 5, { align: 'center' });
+    
+    const dataUri = doc.output('datauristring');
+    setPdfPreview({ dataUri, patient });
+  };
+  
+  const triggerDownload = () => {
+    if (!pdfPreview) return;
+    const { patient } = pdfPreview;
+    
+    const link = document.createElement('a');
+    link.href = pdfPreview.dataUri;
+    link.download = `invoice-${patient.name.replace(/\s/g, '-')}-${patient.id}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    setPdfPreview(null);
   };
 
   return (
@@ -285,7 +300,6 @@ export default function PatientsTable() {
                           <DropdownMenuItem onClick={() => handleDownloadBill(patient)}>
                             <Download className="mr-2 h-4 w-4" /> Download Bill
                           </DropdownMenuItem>
-                          <DropdownMenuSeparator />
                           <DropdownMenuItem
                             className="text-destructive"
                             onClick={() => setPatientToDelete(patient)}
@@ -308,6 +322,24 @@ export default function PatientsTable() {
           </Table>
         </CardContent>
       </Card>
+      
+      {pdfPreview && (
+        <Dialog open={!!pdfPreview} onOpenChange={(open) => !open && setPdfPreview(null)}>
+          <DialogContent className="max-w-4xl h-[90vh]">
+            <DialogHeader>
+              <DialogTitle>Bill Preview for {pdfPreview.patient.name}</DialogTitle>
+            </DialogHeader>
+            <div className="h-full flex-grow border rounded-md overflow-hidden">
+                <iframe src={pdfPreview.dataUri} className="w-full h-full" title="Bill Preview" />
+            </div>
+            <DialogFooter>
+                <Button variant="outline" onClick={() => setPdfPreview(null)}>Close</Button>
+                <Button onClick={triggerDownload}><Download className="mr-2 h-4 w-4"/>Download PDF</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
       {patientToDelete && (
         <AlertDialog open={!!patientToDelete} onOpenChange={(open) => !open && setPatientToDelete(null)}>
           <AlertDialogContent>
