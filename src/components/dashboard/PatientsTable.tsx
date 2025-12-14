@@ -95,7 +95,8 @@ export default function PatientsTable() {
         doc.setTextColor(0, 0, 0); // Black color
         doc.text("Advance Spine | Joint & Laser Center", docWidth / 2, 29, { align: "center" });
 
-        const addressLines = doc.splitTextToSize(contactInfo.address, docWidth - 40);
+        const address = contactInfo?.address || '';
+        const addressLines = doc.splitTextToSize(address, docWidth - 40);
         doc.text(addressLines, docWidth / 2, 35, { align: "center" });
         let currentY = 35 + (addressLines.length * 5);
 
@@ -118,19 +119,20 @@ export default function PatientsTable() {
 
 
         doc.text("Patient Name:", 14, yPos);
-        const patientNameLines = doc.splitTextToSize(patient.name || "", docWidth - 14 - 55);
+        const patientName = patient?.name || "";
+        const patientNameLines = doc.splitTextToSize(patientName, docWidth - 14 - 55);
         doc.text(patientNameLines, 55, yPos);
         
         doc.text("Bill Number:", docWidth - 60, yPos);
-        doc.text(patient.billNumber || "", docWidth - 14, yPos, { align: 'right' });
+        doc.text(patient?.billNumber || "", docWidth - 14, yPos, { align: 'right' });
         
         yPos += (patientNameLines.length * 5) + 2;
         
         const patientDetails = [
-            { title: "Mobile:", value: patient.phone || "" },
-            { title: "Consultant Physio:", value: patient.consultantPhysio || "" },
-            { title: "Diagnosis:", value: patient.diagnosis || "" },
-            { title: "Treatment:", value: patient.treatmentPlan || "" },
+            { title: "Mobile:", value: patient?.phone || "" },
+            { title: "Consultant Physio:", value: patient?.consultantPhysio || "" },
+            { title: "Diagnosis:", value: patient?.diagnosis || "" },
+            { title: "Treatment:", value: patient?.treatmentPlan || "" },
         ];
         
         patientDetails.forEach(detail => {
@@ -142,8 +144,8 @@ export default function PatientsTable() {
 
         finalY = yPos;
 
-        const sortedSessions = patient.sessions ? [...patient.sessions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) : [];
-        const sortedPayments = (patient.payments || []).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        const sortedSessions = (patient?.sessions || []).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        const sortedPayments = (patient?.payments || []).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         
         // --- Session Dates Table ---
         if (sortedSessions && sortedSessions.length > 0) {
@@ -165,10 +167,7 @@ export default function PatientsTable() {
                 margin: { left: 14, right: 14 },
                 tableWidth: docWidth - 28,
             });
-            const lastTable = doc as any;
-            if (lastTable.lastAutoTable) {
-              finalY = lastTable.lastAutoTable.finalY;
-            }
+            finalY = (doc as any).lastAutoTable.finalY;
         }
 
         // --- Payment Table ---
@@ -193,10 +192,7 @@ export default function PatientsTable() {
             },
             margin: { left: 14, right: 14 },
           });
-          const lastTable = doc as any;
-          if (lastTable.lastAutoTable) {
-            finalY = lastTable.lastAutoTable.finalY;
-          }
+          finalY = (doc as any).lastAutoTable.finalY;
         }
 
         // --- Totals ---
@@ -210,8 +206,8 @@ export default function PatientsTable() {
         checkAndAddPage(40); // Space for totals
         finalY += 10;
         
-        const totalPaid = (patient.payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-        const totalBillAmount = Number(patient.totalBill) || 0;
+        const totalPaid = (patient?.payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+        const totalBillAmount = Number(patient?.totalBill) || 0;
         const balanceDue = totalBillAmount - totalPaid;
 
         doc.setFontSize(10);
@@ -241,7 +237,6 @@ export default function PatientsTable() {
             doc.addPage();
             footerY = pageHeight - 30;
         }
-
 
         doc.setFontSize(10);
         doc.setTextColor(0, 0, 0);
