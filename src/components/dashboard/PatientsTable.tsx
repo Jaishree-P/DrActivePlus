@@ -145,10 +145,10 @@ export default function PatientsTable() {
             yPos += (valueLines.length * 5) + 2;
         });
 
-        let finalY = yPos + 5;
+        let finalY = yPos;
 
         const sortedSessions = patient.sessions ? [...patient.sessions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) : [];
-        const sortedPayments = patient.payments ? [...patient.payments].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) : [];
+        const sortedPayments = (patient.payments || []).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         
         // --- Session Dates Table ---
         if (sortedSessions && sortedSessions.length > 0) {
@@ -183,7 +183,7 @@ export default function PatientsTable() {
 
         // --- Payment Table ---
         if (sortedPayments && sortedPayments.length > 0) {
-          finalY = Math.max(finalY, yPos) + 5;
+          finalY = (doc as any).lastAutoTable ? Math.max(finalY, (doc as any).lastAutoTable.finalY + 5) : finalY + 5;
           autoTable(doc, {
             startY: finalY,
             head: [['#', 'Payment Date', 'Amount Paid']],
@@ -215,8 +215,6 @@ export default function PatientsTable() {
         }
 
         // --- Totals ---
-        finalY = Math.max(finalY, yPos);
-
         const checkAndAddPage = (spaceNeeded: number) => {
             if (finalY + spaceNeeded > doc.internal.pageSize.getHeight() - 30) { // 30 for footer margin
                 doc.addPage();
