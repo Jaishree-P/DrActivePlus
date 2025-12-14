@@ -47,6 +47,7 @@ import { defaultPatients, contactInfo } from "@/lib/data";
 import { type Patient } from "@/lib/types";
 import { format, isValid, parseISO } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { logoBase64 } from "@/lib/logo-base64";
 
 
 export default function PatientsTable() {
@@ -73,7 +74,7 @@ export default function PatientsTable() {
     try {
       const doc = new jsPDF();
       const docWidth = doc.internal.pageSize.getWidth();
-      let yPos = 20;
+      let yPos = 15;
 
       const safeString = (str: any) => (str || '').toString();
       const safeNumber = (num: any) => {
@@ -86,40 +87,50 @@ export default function PatientsTable() {
         const date = typeof dateStr === 'string' ? parseISO(dateStr) : new Date(dateStr);
         return isValid(date) ? format(date, 'dd MMM yyyy') : "N/A";
       };
+
+      // Header with Logo
+      const logoWidth = 15;
+      const logoHeight = 15;
+      const clinicName = "Doctor Active Plus";
+      const clinicNameWidth = doc.getStringUnitWidth(clinicName) * doc.getFontSize() / doc.internal.scaleFactor;
+      const totalHeaderWidth = logoWidth + 5 + clinicNameWidth;
+      const headerStartX = (docWidth - totalHeaderWidth) / 2;
+
+      doc.addImage(logoBase64, 'PNG', headerStartX, yPos - (logoHeight / 2) - 1, logoWidth, logoHeight);
       
-      // Header
       doc.setFontSize(22);
       doc.setTextColor(185, 28, 28);
-      doc.text("Doctor Active Plus", docWidth / 2, yPos, { align: 'center' });
+      doc.text(clinicName, headerStartX + logoWidth + 5, yPos);
       yPos += 8;
 
       doc.setFontSize(10);
       doc.setTextColor(100, 116, 139);
-      doc.text("PHYSIOTHERAPY & PAIN CLINIC", docWidth / 2, yPos, { align: 'center' });
-      yPos += 5;
       
       const address = safeString(contactInfo.address);
-      const addressLines = doc.splitTextToSize(address, docWidth - 28);
-      doc.text(addressLines, 14, yPos);
-      yPos += (addressLines.length * 4) + 2;
-
-      doc.text(`Mobile: ${safeString(contactInfo.phone)} | Email: ${safeString(contactInfo.email)}`, 14, yPos);
-      yPos += 6;
-
+      doc.text(address, docWidth / 2, yPos, { align: 'center' });
+      yPos += 5;
+      
+      // Lines with GSTIN
       doc.setDrawColor(220, 53, 69);
       doc.setLineWidth(0.5);
       doc.line(14, yPos, docWidth - 14, yPos);
+      yPos += 5;
+      
+      const gstinText = "A unit of Speed Plus Health Initiatives | GSTIN: 29AOTPY4559F1ZX.";
+      doc.setFontSize(8);
+      doc.setTextColor(100, 116, 139);
+      doc.text(gstinText, docWidth/2, yPos, { align: 'center'});
+      yPos += 3;
+
+      doc.line(14, yPos, docWidth - 14, yPos);
       yPos += 10;
-
-
+      
       // Patient Details & Bill Info
       doc.setFontSize(12);
       doc.setTextColor(0, 0, 0);
       doc.text(`Patient Name: ${safeString(patient.name)}`, 14, yPos);
       doc.text(`Bill Number: ${safeString(patient.billNumber)}`, docWidth - 14, yPos, { align: 'right' });
       yPos += 7;
-      doc.text(`Date: ${safeDate(new Date())}`, 14, yPos);
-      yPos += 10;
 
       const patientDetailsStartY = yPos;
       
@@ -348,3 +359,5 @@ export default function PatientsTable() {
     </>
   );
 }
+
+    
