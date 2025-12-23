@@ -79,7 +79,9 @@ export default function NewPatientPage() {
         });
 
         // Pass the new patient's data with the navigation to avoid race conditions
-        router.push(`/dashboard/patients/${newPatient.id}`);
+        const url = `/dashboard/patients/${newPatient.id}`;
+        window.history.pushState({ patient: newPatient }, '', url);
+        router.push(url);
     };
 
   return (

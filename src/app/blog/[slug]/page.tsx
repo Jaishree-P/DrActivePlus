@@ -6,6 +6,7 @@ import { defaultBlogPosts } from "@/lib/data";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { format } from "date-fns";
+import { useEffect, useState } from "react";
 
 type BlogDetailPageProps = {
   params: {
@@ -19,8 +20,47 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
     defaultBlogPosts
   );
 
-  const post = blogPosts.find((p) => p.slug === params.slug);
+  const getInitialPost = () => {
+    try {
+      if (typeof window !== 'undefined' && window.history.state?.post) {
+        return window.history.state.post as BlogPost;
+      }
+    } catch (e) {
+      console.error("Could not read navigation state", e);
+    }
+    return undefined;
+  };
 
+  const [post, setPost] = useState<BlogPost | undefined>(getInitialPost());
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const initialPost = getInitialPost();
+
+    const findPost = () => {
+        const p = blogPosts.find((p) => p.slug === params.slug);
+        if (p) return p;
+        return initialPost?.slug === params.slug ? initialPost : undefined;
+    };
+
+    const currentPost = findPost();
+
+    if (currentPost) {
+        setPost(currentPost);
+        setIsLoading(false);
+    } else {
+        if (localStorage.getItem('blog-posts') !== null) {
+            notFound();
+        }
+    }
+  }, [params.slug, blogPosts]);
+
+
+  if (isLoading && !post) {
+    // You can add a loading skeleton here if you want
+    return null;
+  }
+  
   if (!post) {
     notFound();
   }

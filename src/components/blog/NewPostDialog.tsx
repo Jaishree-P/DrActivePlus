@@ -20,6 +20,8 @@ import * as z from "zod";
 import { type BlogPost } from "@/lib/types";
 import { useState }from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+
 
 const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters long"),
@@ -39,6 +41,8 @@ type NewPostDialogProps = {
 export default function NewPostDialog({ isOpen, setIsOpen, onPostCreated }: NewPostDialogProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
+  const router = useRouter();
+
 
   const {
     register,
@@ -76,9 +80,13 @@ export default function NewPostDialog({ isOpen, setIsOpen, onPostCreated }: NewP
       imageHint: data.imageHint || "health wellness",
     };
     onPostCreated(newPost);
-    reset();
-    setImagePreview(null);
-    setImageDataUrl(null);
+    
+    // Pass the new post's data with the navigation
+    const url = `/blog/${newPost.slug}`;
+    window.history.pushState({ post: newPost }, '', url);
+    router.push(url);
+    
+    handleReset();
   };
   
   const handleReset = () => {
@@ -89,9 +97,9 @@ export default function NewPostDialog({ isOpen, setIsOpen, onPostCreated }: NewP
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleReset}>
       <DialogTrigger asChild>
-        <Button>Create New Post</Button>
+        <Button onClick={() => setIsOpen(true)}>Create New Post</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>

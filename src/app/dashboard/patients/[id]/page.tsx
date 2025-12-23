@@ -3,7 +3,7 @@
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { type Patient, type PatientSession, type PatientPayment } from "@/lib/types";
 import { defaultPatients } from "@/lib/data";
-import { notFound, useRouter } from "next/navigation";
+import { notFound, useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useForm, SubmitHandler, useForm as usePaymentForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -65,7 +65,19 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
   const { toast } = useToast();
   const router = useRouter();
 
-  const [patient, setPatient] = useState<Patient | undefined>(undefined);
+  // Try to get patient data passed via navigation state
+  const getInitialPatient = () => {
+    try {
+      if (typeof window !== 'undefined' && window.history.state?.patient) {
+        return window.history.state.patient as Patient;
+      }
+    } catch (e) {
+      console.error("Could not read navigation state", e);
+    }
+    return undefined;
+  };
+
+  const [patient, setPatient] = useState<Patient | undefined>(getInitialPatient());
   const [isLoading, setIsLoading] = useState(true);
   
   const [sessionDate, setSessionDate] = useState<Date | undefined>(new Date());
@@ -114,9 +126,18 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
 
 
   useEffect(() => {
-    // This effect runs when the `patients` data from local storage is updated.
-    // It's the primary mechanism for finding the patient.
-    const currentPatient = patients.find((p) => p.id === params.id);
+    const initialPatient = getInitialPatient();
+
+    const findPatient = () => {
+      const p = patients.find((p) => p.id === params.id);
+      if (p) {
+        return p;
+      }
+      return initialPatient?.id === params.id ? initialPatient : undefined;
+    };
+    
+    const currentPatient = findPatient();
+    
     if (currentPatient) {
         if (!currentPatient.payments) {
             currentPatient.payments = [];
@@ -132,23 +153,16 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
             medicines: currentPatient.medicines,
         });
         setIsLoading(false);
-    } else if (localStorage.getItem('patients') !== null) {
-      // If patients have loaded but the specific one isn't found, it might be a 404.
-      // However, we wait a bit before concluding, to handle the race condition.
-      const timer = setTimeout(() => {
-        const freshPatients = JSON.parse(localStorage.getItem('patients') || '[]');
-        const freshPatient = freshPatients.find((p: Patient) => p.id === params.id);
-        if (!freshPatient) {
-          notFound();
-        }
-      }, 500); // Wait 500ms before giving up
-
-      return () => clearTimeout(timer);
+    } else {
+      // If patients are loaded from storage but still no patient, it's a 404
+      if (localStorage.getItem('patients') !== null) {
+        notFound();
+      }
     }
   }, [params.id, patients, reset]);
 
 
-  if (isLoading) {
+  if (isLoading && !patient) {
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -172,13 +186,16 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
   }
   
   if (!patient) {
-    // This state should ideally not be reached due to the loading skeleton and effect logic.
-    // It acts as a fallback.
-    return null;
+    // Should be caught by the useEffect, but as a fallback.
+    notFound();
   }
   
   const updatePatientInStorage = (updatedPatient: Patient) => {
       const updatedPatients = patients.map(p => p.id === updatedPatient.id ? updatedPatient : p);
+      // Ensure the patient is in the list if it was newly created
+      if (!updatedPatients.some(p => p.id === updatedPatient.id)) {
+        updatedPatients.unshift(updatedPatient);
+      }
       setPatients(updatedPatients);
   }
 
