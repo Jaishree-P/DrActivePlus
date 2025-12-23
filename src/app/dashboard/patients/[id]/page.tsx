@@ -29,6 +29,7 @@ import { CalendarIcon, Trash } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { v4 as uuidv4 } from "uuid";
+import { Skeleton } from "@/components/ui/skeleton";
 
 
 const formSchema = z.object({
@@ -64,13 +65,8 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
   const { toast } = useToast();
   const router = useRouter();
 
-  const [patient, setPatient] = useState<Patient | undefined>(() => {
-    const foundPatient = patients.find((p) => p.id === params.id);
-    if (foundPatient && !foundPatient.payments) {
-      foundPatient.payments = [];
-    }
-    return foundPatient;
-  });
+  const [patient, setPatient] = useState<Patient | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(true);
   
   const [sessionDate, setSessionDate] = useState<Date | undefined>(new Date());
   
@@ -118,6 +114,8 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
 
 
   useEffect(() => {
+    // The useLocalStorage hook might not have the latest data on initial render.
+    // This effect will re-run when `patients` array is updated from local storage.
     const currentPatient = patients.find((p) => p.id === params.id);
     if (currentPatient) {
         if (!currentPatient.payments) {
@@ -133,12 +131,43 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
             treatmentPlan: currentPatient.treatmentPlan,
             medicines: currentPatient.medicines,
         });
+        setIsLoading(false);
+    } else {
+        // If patients have loaded but this one isn't found, it's a 404.
+        if (patients.length > 0 || localStorage.getItem('patients') !== null) {
+            notFound();
+        }
     }
   }, [params.id, patients, reset]);
 
 
+  if (isLoading) {
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <Skeleton className="h-9 w-48" />
+                <Skeleton className="h-10 w-36" />
+            </div>
+            <Card>
+                <CardHeader>
+                    <Skeleton className="h-6 w-1/3 mb-2" />
+                    <Skeleton className="h-4 w-2/3" />
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-24 w-full" />
+                    <Skeleton className="h-10 w-32 self-end" />
+                </CardContent>
+            </Card>
+        </div>
+    )
+  }
+  
   if (!patient) {
-    notFound();
+    // This will be caught by the useEffect above, which calls notFound().
+    // This is a fallback.
+    return null;
   }
   
   const updatePatientInStorage = (updatedPatient: Patient) => {
@@ -474,5 +503,3 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
     </div>
   );
 }
-
-    
