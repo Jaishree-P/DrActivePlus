@@ -22,21 +22,20 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
     defaultBlogPosts
   );
 
-  const [post, setPost] = useState<BlogPost | undefined>();
-  const [isLoading, setIsLoading] = useState(true);
+  const [post, setPost] = useState<BlogPost | undefined | null>(undefined); // undefined: loading, null: not found
 
   useEffect(() => {
+    // This effect ensures we check for the post whenever the list of posts updates.
+    // This is key to solving the race condition.
     if (blogPosts.length > 0) {
       const foundPost = blogPosts.find((p) => p.slug === params.slug);
-      if (foundPost) {
-          setPost(foundPost);
-      }
-      setIsLoading(false);
+      setPost(foundPost || null); // Set to post if found, or null if not found
     }
   }, [params.slug, blogPosts]);
 
 
-  if (isLoading) {
+  if (post === undefined) {
+    // Initial loading state while we check local storage
     return (
         <div className="container mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
              <div className="text-center mb-8">
@@ -53,7 +52,8 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
     )
   }
   
-  if (!post) {
+  if (post === null) {
+    // Post is confirmed not to exist after checking.
     notFound();
   }
 
@@ -86,5 +86,3 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
     </article>
   );
 }
-
-    
