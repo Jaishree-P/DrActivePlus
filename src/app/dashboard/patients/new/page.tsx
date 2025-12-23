@@ -78,10 +78,7 @@ export default function NewPatientPage() {
             description: `${newPatient.name} has been added to your patient list.`,
         });
 
-        // Pass the new patient's data with the navigation to avoid race conditions
-        const url = `/dashboard/patients/${newPatient.id}`;
-        window.history.pushState({ patient: newPatient }, '', url);
-        router.push(url);
+        router.push(`/dashboard/patients/${newPatient.id}`);
     };
 
   return (

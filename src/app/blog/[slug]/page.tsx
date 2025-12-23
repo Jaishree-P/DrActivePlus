@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type BlogDetailPageProps = {
   params: {
@@ -20,45 +21,46 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
     defaultBlogPosts
   );
 
-  const getInitialPost = () => {
-    try {
-      if (typeof window !== 'undefined' && window.history.state?.post) {
-        return window.history.state.post as BlogPost;
-      }
-    } catch (e) {
-      console.error("Could not read navigation state", e);
-    }
-    return undefined;
-  };
-
-  const [post, setPost] = useState<BlogPost | undefined>(getInitialPost());
+  const [post, setPost] = useState<BlogPost | undefined>();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const initialPost = getInitialPost();
+    // Wait for blogPosts to be loaded from localStorage.
+    if (blogPosts.length === 0 && localStorage.getItem('blog-posts') === null) {
+      // Still loading from storage, or it's genuinely empty on first load.
+      // Let's not jump to notFound() immediately.
+      return;
+    }
 
-    const findPost = () => {
-        const p = blogPosts.find((p) => p.slug === params.slug);
-        if (p) return p;
-        return initialPost?.slug === params.slug ? initialPost : undefined;
-    };
+    const foundPost = blogPosts.find((p) => p.slug === params.slug);
 
-    const currentPost = findPost();
-
-    if (currentPost) {
-        setPost(currentPost);
-        setIsLoading(false);
+    if (foundPost) {
+        setPost(foundPost);
     } else {
+        // Only declare notFound if we are sure posts are loaded and the item isn't there.
         if (localStorage.getItem('blog-posts') !== null) {
             notFound();
         }
     }
+    setIsLoading(false);
   }, [params.slug, blogPosts]);
 
 
-  if (isLoading && !post) {
-    // You can add a loading skeleton here if you want
-    return null;
+  if (isLoading) {
+    return (
+        <div className="container mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+             <div className="text-center mb-8">
+                <Skeleton className="h-12 w-3/4 mx-auto" />
+                <Skeleton className="h-4 w-1/2 mx-auto mt-4" />
+             </div>
+             <Skeleton className="relative w-full h-64 md:h-96 rounded-lg my-8" />
+             <div className="space-y-4">
+                <Skeleton className="h-6 w-full" />
+                <Skeleton className="h-6 w-full" />
+                <Skeleton className="h-6 w-5/6" />
+             </div>
+        </div>
+    )
   }
   
   if (!post) {

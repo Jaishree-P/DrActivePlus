@@ -80,13 +80,8 @@ export default function NewPostDialog({ isOpen, setIsOpen, onPostCreated }: NewP
       imageHint: data.imageHint || "health wellness",
     };
     onPostCreated(newPost);
-    
-    // Pass the new post's data with the navigation
-    const url = `/blog/${newPost.slug}`;
-    window.history.pushState({ post: newPost }, '', url);
-    router.push(url);
-    
     handleReset();
+    router.push(`/blog/${newPost.slug}`);
   };
   
   const handleReset = () => {
@@ -97,7 +92,7 @@ export default function NewPostDialog({ isOpen, setIsOpen, onPostCreated }: NewP
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleReset}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button onClick={() => setIsOpen(true)}>Create New Post</Button>
       </DialogTrigger>

@@ -3,7 +3,7 @@
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { type Patient, type PatientSession, type PatientPayment } from "@/lib/types";
 import { defaultPatients } from "@/lib/data";
-import { notFound, useRouter, usePathname, useSearchParams } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import { useForm, SubmitHandler, useForm as usePaymentForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -65,31 +65,19 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
   const { toast } = useToast();
   const router = useRouter();
 
-  // Try to get patient data passed via navigation state
-  const getInitialPatient = () => {
-    try {
-      if (typeof window !== 'undefined' && window.history.state?.patient) {
-        return window.history.state.patient as Patient;
-      }
-    } catch (e) {
-      console.error("Could not read navigation state", e);
-    }
-    return undefined;
-  };
-
-  const [patient, setPatient] = useState<Patient | undefined>(getInitialPatient());
+  const [patient, setPatient] = useState<Patient | undefined>();
   const [isLoading, setIsLoading] = useState(true);
   
   const [sessionDate, setSessionDate] = useState<Date | undefined>(new Date());
   
   const sortedSessions = useMemo(() => {
     if (!patient) return [];
-    return [...patient.sessions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    return [...patient.sessions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [patient]);
 
   const sortedPayments = useMemo(() => {
     if (!patient?.payments) return [];
-    return [...patient.payments].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    return [...patient.payments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [patient?.payments]);
   
   const totalPaid = useMemo(() => {
@@ -126,17 +114,11 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
 
 
   useEffect(() => {
-    const initialPatient = getInitialPatient();
-
-    const findPatient = () => {
-      const p = patients.find((p) => p.id === params.id);
-      if (p) {
-        return p;
-      }
-      return initialPatient?.id === params.id ? initialPatient : undefined;
-    };
+    if (patients.length === 0 && localStorage.getItem('patients') === null) {
+      return;
+    }
     
-    const currentPatient = findPatient();
+    const currentPatient = patients.find((p) => p.id === params.id);
     
     if (currentPatient) {
         if (!currentPatient.payments) {
@@ -152,17 +134,16 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
             treatmentPlan: currentPatient.treatmentPlan,
             medicines: currentPatient.medicines,
         });
-        setIsLoading(false);
     } else {
-      // If patients are loaded from storage but still no patient, it's a 404
       if (localStorage.getItem('patients') !== null) {
         notFound();
       }
     }
+    setIsLoading(false);
   }, [params.id, patients, reset]);
 
 
-  if (isLoading && !patient) {
+  if (isLoading) {
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -186,13 +167,11 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
   }
   
   if (!patient) {
-    // Should be caught by the useEffect, but as a fallback.
     notFound();
   }
   
   const updatePatientInStorage = (updatedPatient: Patient) => {
       const updatedPatients = patients.map(p => p.id === updatedPatient.id ? updatedPatient : p);
-      // Ensure the patient is in the list if it was newly created
       if (!updatedPatients.some(p => p.id === updatedPatient.id)) {
         updatedPatients.unshift(updatedPatient);
       }
