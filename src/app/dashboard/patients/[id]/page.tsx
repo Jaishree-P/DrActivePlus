@@ -115,8 +115,6 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
 
 
   useEffect(() => {
-    // This effect runs when `patients` data from local storage is updated.
-    // It gives us a chance to find the patient after a redirect from the creation page.
     if (patients.length > 0) {
       const currentPatient = patients.find((p) => p.id === params.id);
       if (currentPatient) {
@@ -134,9 +132,8 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
             medicines: currentPatient.medicines,
         });
       }
+      setIsLoading(false);
     }
-    // We set loading to false only after we've had a chance to check the `patients` array.
-    setIsLoading(false);
   }, [params.id, patients, reset]);
 
 
@@ -163,7 +160,6 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
     )
   }
   
-  // After loading, if the patient is still not found, then it's a real 404.
   if (!patient) {
     notFound();
   }

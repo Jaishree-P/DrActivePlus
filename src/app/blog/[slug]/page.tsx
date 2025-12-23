@@ -26,16 +26,13 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // This effect runs when `blogPosts` data from local storage is updated.
-    // It gives us a chance to find the post after a redirect from the creation page.
     if (blogPosts.length > 0) {
       const foundPost = blogPosts.find((p) => p.slug === params.slug);
       if (foundPost) {
           setPost(foundPost);
       }
+      setIsLoading(false);
     }
-    // We set loading to false only after we've had a chance to check the `blogPosts` array.
-    setIsLoading(false);
   }, [params.slug, blogPosts]);
 
 
@@ -56,7 +53,6 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
     )
   }
   
-  // After loading, if the post is still not found, then it's a real 404.
   if (!post) {
     notFound();
   }
