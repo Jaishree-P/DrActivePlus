@@ -9,7 +9,6 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,10 +18,9 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { type BlogPost } from "@/lib/types";
-import { useState }from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-
 
 const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters long"),
@@ -42,8 +40,8 @@ type NewPostDialogProps = {
 export default function NewPostDialog({ isOpen, setIsOpen, onPostCreated }: NewPostDialogProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
+  const [newPostSlug, setNewPostSlug] = useState<string | null>(null);
   const router = useRouter();
-
 
   const {
     register,
@@ -53,6 +51,14 @@ export default function NewPostDialog({ isOpen, setIsOpen, onPostCreated }: NewP
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
   });
+
+  useEffect(() => {
+    if (newPostSlug) {
+      router.push(`/blog/${newPostSlug}`);
+      setNewPostSlug(null); // Reset after navigation
+    }
+  }, [newPostSlug, router]);
+
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -68,21 +74,23 @@ export default function NewPostDialog({ isOpen, setIsOpen, onPostCreated }: NewP
   };
 
   const onSubmit: SubmitHandler<FormValues> = (data) => {
+    const slug = data.title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-") + `-${Date.now()}`;
+
     const newPost: BlogPost = {
       ...data,
-      slug: data.title
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, "") // remove special characters
-        .trim()
-        .replace(/\s+/g, "-") // replace spaces with hyphens
-        .replace(/-+/g, "-") + `-${Date.now()}`, // Add timestamp for uniqueness
+      slug: slug,
       date: new Date().toISOString(),
       imageUrl: imageDataUrl || `https://picsum.photos/seed/${Math.random()}/600/400`,
       imageHint: data.imageHint || "health wellness",
     };
     onPostCreated(newPost);
     handleReset();
-    router.push(`/blog/${newPost.slug}`);
+    setNewPostSlug(slug); // Trigger navigation via useEffect
   };
   
   const handleReset = () => {
@@ -93,7 +101,12 @@ export default function NewPostDialog({ isOpen, setIsOpen, onPostCreated }: NewP
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) {
+        handleReset();
+      }
+      setIsOpen(open);
+    }}>
       <DialogTrigger asChild>
         <Button onClick={() => setIsOpen(true)}>Create New Post</Button>
       </DialogTrigger>
@@ -149,5 +162,3 @@ export default function NewPostDialog({ isOpen, setIsOpen, onPostCreated }: NewP
     </Dialog>
   );
 }
-
-    
