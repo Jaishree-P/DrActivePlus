@@ -26,23 +26,15 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Wait for blogPosts to be loaded from localStorage.
-    if (blogPosts.length === 0 && localStorage.getItem('blog-posts') === null) {
-      // Still loading from storage, or it's genuinely empty on first load.
-      // Let's not jump to notFound() immediately.
-      return;
+    // This effect runs when `blogPosts` data from local storage is updated.
+    // It gives us a chance to find the post after a redirect from the creation page.
+    if (blogPosts.length > 0) {
+      const foundPost = blogPosts.find((p) => p.slug === params.slug);
+      if (foundPost) {
+          setPost(foundPost);
+      }
     }
-
-    const foundPost = blogPosts.find((p) => p.slug === params.slug);
-
-    if (foundPost) {
-        setPost(foundPost);
-    } else {
-        // Only declare notFound if we are sure posts are loaded and the item isn't there.
-        if (localStorage.getItem('blog-posts') !== null) {
-            notFound();
-        }
-    }
+    // We set loading to false only after we've had a chance to check the `blogPosts` array.
     setIsLoading(false);
   }, [params.slug, blogPosts]);
 
@@ -64,6 +56,7 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
     )
   }
   
+  // After loading, if the post is still not found, then it's a real 404.
   if (!post) {
     notFound();
   }

@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
-import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,8 +36,6 @@ export default function NewPatientPage() {
     const router = useRouter();
     const { toast } = useToast();
     const [patients, setPatients] = useLocalStorage<Patient[]>("patients", defaultPatients);
-    const [newPatientId, setNewPatientId] = useState<string | null>(null);
-
 
     const {
         register,
@@ -52,12 +49,6 @@ export default function NewPatientPage() {
             totalBill: 0,
         }
     });
-
-    useEffect(() => {
-        if (newPatientId) {
-            router.push(`/dashboard/patients/${newPatientId}`);
-        }
-    }, [newPatientId, router]);
 
     const generateBillNumber = () => {
         const currentYear = new Date().getFullYear();
@@ -87,7 +78,7 @@ export default function NewPatientPage() {
             description: `${newPatient.name} has been added to your patient list.`,
         });
 
-        setNewPatientId(newPatient.id);
+        router.push(`/dashboard/patients/${newPatient.id}`);
     };
 
   return (
