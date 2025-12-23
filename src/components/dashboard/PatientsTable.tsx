@@ -189,6 +189,8 @@ export default function PatientsTable() {
 
             // Totals
             const totalBill = safeNumber(patient.totalBill);
+            const sessionsRequired = safeNumber(patient.sessionsRequired);
+            const costPerSession = sessionsRequired > 0 ? totalBill / sessionsRequired : 0;
             const totalPaid = (patient.payments || []).reduce((acc, p) => acc + safeNumber(p.amount), 0);
             const balanceDue = totalBill - totalPaid;
             
@@ -198,6 +200,10 @@ export default function PatientsTable() {
               { label: 'Total Paid:', value: `Rs. ${totalPaid.toFixed(2)}` },
               { label: 'Balance Due:', value: `Rs. ${balanceDue.toFixed(2)}` }
             ];
+
+            if (costPerSession > 0) {
+                totals.unshift({ label: 'Cost per Session:', value: `Rs. ${costPerSession.toFixed(2)}` });
+            }
 
             autoTable(doc, {
               startY: lastY,
@@ -372,7 +378,3 @@ export default function PatientsTable() {
     </>
   );
 }
-
-    
-
-    
