@@ -114,8 +114,8 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
 
 
   useEffect(() => {
-    // The useLocalStorage hook might not have the latest data on initial render.
-    // This effect will re-run when `patients` array is updated from local storage.
+    // This effect runs when the `patients` data from local storage is updated.
+    // It's the primary mechanism for finding the patient.
     const currentPatient = patients.find((p) => p.id === params.id);
     if (currentPatient) {
         if (!currentPatient.payments) {
@@ -132,11 +132,18 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
             medicines: currentPatient.medicines,
         });
         setIsLoading(false);
-    } else {
-        // If patients have loaded but this one isn't found, it's a 404.
-        if (patients.length > 0 || localStorage.getItem('patients') !== null) {
-            notFound();
+    } else if (localStorage.getItem('patients') !== null) {
+      // If patients have loaded but the specific one isn't found, it might be a 404.
+      // However, we wait a bit before concluding, to handle the race condition.
+      const timer = setTimeout(() => {
+        const freshPatients = JSON.parse(localStorage.getItem('patients') || '[]');
+        const freshPatient = freshPatients.find((p: Patient) => p.id === params.id);
+        if (!freshPatient) {
+          notFound();
         }
+      }, 500); // Wait 500ms before giving up
+
+      return () => clearTimeout(timer);
     }
   }, [params.id, patients, reset]);
 
@@ -165,8 +172,8 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
   }
   
   if (!patient) {
-    // This will be caught by the useEffect above, which calls notFound().
-    // This is a fallback.
+    // This state should ideally not be reached due to the loading skeleton and effect logic.
+    // It acts as a fallback.
     return null;
   }
   

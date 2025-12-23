@@ -70,7 +70,7 @@ export default function NewPostDialog({ isOpen, setIsOpen, onPostCreated }: NewP
         .replace(/[^a-z0-9\s-]/g, "") // remove special characters
         .trim()
         .replace(/\s+/g, "-") // replace spaces with hyphens
-        .replace(/-+/g, "-"), // remove consecutive hyphens
+        .replace(/-+/g, "-") + `-${Date.now()}`, // Add timestamp for uniqueness
       date: new Date().toISOString(),
       imageUrl: imageDataUrl || `https://picsum.photos/seed/${Math.random()}/600/400`,
       imageHint: data.imageHint || "health wellness",

@@ -70,13 +70,15 @@ export default function NewPatientPage() {
             payments: [], // Initialize with no payments
         };
 
-        setPatients([newPatient, ...patients]);
+        const updatedPatients = [newPatient, ...patients];
+        setPatients(updatedPatients);
 
         toast({
             title: "Patient Added",
             description: `${newPatient.name} has been added to your patient list.`,
         });
 
+        // Pass the new patient's data with the navigation to avoid race conditions
         router.push(`/dashboard/patients/${newPatient.id}`);
     };
 
