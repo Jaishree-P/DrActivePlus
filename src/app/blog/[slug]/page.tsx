@@ -23,19 +23,20 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
   );
 
   const [post, setPost] = useState<BlogPost | undefined | null>(undefined); // undefined: loading, null: not found
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // This effect ensures we check for the post whenever the list of posts updates.
-    // This is key to solving the race condition.
-    if (blogPosts.length > 0) {
+    if (blogPosts && blogPosts.length > 0) {
       const foundPost = blogPosts.find((p) => p.slug === params.slug);
-      setPost(foundPost || null); // Set to post if found, or null if not found
+      setPost(foundPost || null);
     }
+    // Only set loading to false once we have checked blogPosts
+    setIsLoading(false);
   }, [params.slug, blogPosts]);
 
 
-  if (post === undefined) {
-    // Initial loading state while we check local storage
+  if (isLoading || post === undefined) {
+    // Show skeleton while we wait for local storage to load and find the post.
     return (
         <div className="container mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
              <div className="text-center mb-8">

@@ -1,43 +1,67 @@
+
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from 'react';
 
-function getStorageValue<T>(key: string, defaultValue: T): T {
-  if (typeof window !== "undefined") {
-    const saved = localStorage.getItem(key);
-    if (saved !== null && saved !== 'undefined') {
-      try {
-        return JSON.parse(saved);
-      } catch (error) {
-        console.error("Error parsing JSON from localStorage", error);
-        return defaultValue;
-      }
-    }
+// A wrapper for JSON.parse that handles errors
+function parseJSON<T>(value: string | null): T | undefined {
+  try {
+    return value === 'undefined' ? undefined : JSON.parse(value ?? '');
+  } catch {
+    console.log('parsing error on', { value });
+    return undefined;
   }
-  return defaultValue;
 }
 
-export const useLocalStorage = <T,>(key: string, defaultValue: T): [T, (value: T | ((val: T) => T)) => void] => {
-  const [value, setValue] = useState<T>(defaultValue);
+export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
+  // Get from local storage then
+  // parse stored json or return initialValue
+  const readValue = (): T => {
+    // Prevent build errors from server-side rendering
+    if (typeof window === 'undefined') {
+      return initialValue;
+    }
 
-  useEffect(() => {
-    setValue(getStorageValue(key, defaultValue));
-  }, [key, defaultValue]);
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? (parseJSON(item) as T) : initialValue;
+    } catch (error) {
+      console.warn(`Error reading localStorage key “${key}”:`, error);
+      return initialValue;
+    }
+  };
 
-  const setStoredValue = useCallback(
-    (newValue: T | ((val: T) => T)) => {
-      try {
-        const valueToStore = newValue instanceof Function ? newValue(value) : newValue;
-        setValue(valueToStore);
-        if (typeof window !== "undefined") {
-          localStorage.setItem(key, JSON.stringify(valueToStore));
-        }
-      } catch (error) {
-        console.error("Error setting item to localStorage", error);
-      }
-    },
-    [key, value]
-  );
+  // State to store our value
+  // Pass initial state function to useState so logic is only executed once
+  const [storedValue, setStoredValue] = useState<T>(readValue);
 
-  return [value, setStoredValue];
-};
+  // Return a wrapped version of useState's setter function that ...
+  // ... persists the new value to localStorage.
+  const setValue = (value: T | ((val: T) => T)) => {
+    // Prevent build errors from server-side rendering
+    if (typeof window == 'undefined') {
+      console.warn(
+        `Tried setting localStorage key “${key}” even though environment is not a client`,
+      );
+    }
+
+    try {
+      // Allow value to be a function so we have same API as useState
+      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      // Save state
+      setStoredValue(valueToStore);
+      // Save to local storage
+      window.localStorage.setItem(key, JSON.stringify(valueToStore));
+    } catch (error) {
+      console.warn(`Error setting localStorage key “${key}”:`, error);
+    }
+  };
+  
+    useEffect(() => {
+        setStoredValue(readValue());
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+
+  return [storedValue, setValue];
+}
