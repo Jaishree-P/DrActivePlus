@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -18,7 +19,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { type BlogPost } from "@/lib/types";
-import { useState }from "react";
+import { useState, useEffect }from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -41,6 +42,7 @@ type NewPostDialogProps = {
 export default function NewPostDialog({ isOpen, setIsOpen, onPostCreated }: NewPostDialogProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
+  const [newPostSlug, setNewPostSlug] = useState<string | null>(null);
   const router = useRouter();
 
 
@@ -52,6 +54,12 @@ export default function NewPostDialog({ isOpen, setIsOpen, onPostCreated }: NewP
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
   });
+
+  useEffect(() => {
+    if (newPostSlug) {
+      router.push(`/blog/${newPostSlug}`);
+    }
+  }, [newPostSlug, router]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -81,7 +89,7 @@ export default function NewPostDialog({ isOpen, setIsOpen, onPostCreated }: NewP
     };
     onPostCreated(newPost);
     handleReset();
-    router.push(`/blog/${newPost.slug}`);
+    setNewPostSlug(newPost.slug);
   };
   
   const handleReset = () => {
@@ -148,3 +156,5 @@ export default function NewPostDialog({ isOpen, setIsOpen, onPostCreated }: NewP
     </Dialog>
   );
 }
+
+    

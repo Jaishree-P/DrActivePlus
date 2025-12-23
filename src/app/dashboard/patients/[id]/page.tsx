@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -115,9 +116,10 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
 
   useEffect(() => {
     if (patients.length === 0 && localStorage.getItem('patients') === null) {
-      return;
+        // Data is still loading from local storage, wait a bit.
+        return;
     }
-    
+
     const currentPatient = patients.find((p) => p.id === params.id);
     
     if (currentPatient) {
@@ -134,12 +136,13 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
             treatmentPlan: currentPatient.treatmentPlan,
             medicines: currentPatient.medicines,
         });
+        setIsLoading(false);
     } else {
-      if (localStorage.getItem('patients') !== null) {
-        notFound();
-      }
+        // Only call notFound if we are sure the data is loaded and the patient is not there.
+        if (localStorage.getItem('patients') !== null) {
+            notFound();
+        }
     }
-    setIsLoading(false);
   }, [params.id, patients, reset]);
 
 
@@ -506,3 +509,5 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
     </div>
   );
 }
+
+    

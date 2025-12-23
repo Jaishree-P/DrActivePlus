@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -96,3 +97,5 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
     </article>
   );
 }
+
+    
