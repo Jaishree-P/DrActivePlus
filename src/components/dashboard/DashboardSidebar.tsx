@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, Users, UserCircle, LogOut } from "lucide-react";
+import { Home, Users, UserCircle, LogOut, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/Logo";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 const sidebarNavLinks = [
   { href: "/dashboard/patients", label: "Patients", icon: Users },
   { href: "/dashboard/profile", label: "Doctor Profile", icon: UserCircle },
+  { href: "/dashboard/activity-log", label: "Activity Log", icon: History },
 ];
 
 export default function DashboardSidebar() {

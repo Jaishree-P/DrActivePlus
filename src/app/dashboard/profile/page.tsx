@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { useActivityLog } from "@/hooks/use-activity-log";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -37,6 +38,7 @@ export default function DoctorProfilePage() {
     defaultDoctorProfile
   );
   const { toast } = useToast();
+  const { logActivity } = useActivityLog();
 
   const {
     register,
@@ -60,6 +62,7 @@ export default function DoctorProfilePage() {
       certifications: data.certifications.split(",").map(s => s.trim()),
     };
     setDoctorProfile(updatedProfile);
+    logActivity("Updated Profile", `Doctor profile for ${data.name} was updated.`);
     toast({
       title: "Profile Updated",
       description: "Your profile has been successfully saved.",

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm, SubmitHandler } from "react-hook-form";
@@ -17,6 +16,7 @@ import { defaultPatients } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useActivityLog } from "@/hooks/use-activity-log";
 
 const formSchema = z.object({
   name: z.string().min(2, "Full name is required"),
@@ -36,6 +36,7 @@ export default function NewPatientPage() {
     const router = useRouter();
     const { toast } = useToast();
     const [patients, setPatients] = useLocalStorage<Patient[]>("patients", defaultPatients);
+    const { logActivity } = useActivityLog();
 
     const {
         register,
@@ -72,6 +73,7 @@ export default function NewPatientPage() {
         };
 
         setPatients([newPatient, ...patients]);
+        logActivity("Created Patient", `New patient registered: ${newPatient.name} (ID: ${newPatient.id})`);
 
         toast({
             title: "Patient Added",
@@ -169,5 +171,3 @@ export default function NewPatientPage() {
     </div>
   );
 }
-
-    

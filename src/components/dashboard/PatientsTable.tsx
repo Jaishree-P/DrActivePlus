@@ -1,8 +1,6 @@
-
-
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import jsPDF from "jspdf";
 import autoTable from 'jspdf-autotable';
@@ -15,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,7 +38,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { MoreHorizontal, Download, Trash, Eye } from "lucide-react";
+import { MoreHorizontal, Download, Trash, Eye, Search, FileDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -47,6 +46,8 @@ import { defaultPatients } from "@/lib/data";
 import { type Patient } from "@/lib/types";
 import { format, isValid, parseISO } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { useActivityLog } from "@/hooks/use-activity-log";
+
 
 export default function PatientsTable() {
   const router = useRouter();
@@ -55,6 +56,16 @@ export default function PatientsTable() {
   const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null);
   const [pdfPreview, setPdfPreview] = useState<{dataUri: string, patient: Patient} | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const { logActivity } = useActivityLog();
+
+  const filteredPatients = useMemo(() => {
+    if (!searchTerm) {
+        return patients;
+    }
+    return patients.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [patients, searchTerm]);
+
 
   const handleDownloadBill = async (patient: Patient) => {
     if (isGeneratingPdf) return;
@@ -240,6 +251,7 @@ export default function PatientsTable() {
             const dataUri = doc.output('datauristring');
             setPdfPreview({ dataUri, patient });
             setIsGeneratingPdf(false);
+            logActivity("Generated Bill", `Generated PDF bill for patient: ${patient.name}`);
         };
     } catch (error) {
       console.error("Failed to generate PDF:", error);
@@ -268,12 +280,64 @@ export default function PatientsTable() {
   
   const handleDelete = (patientId: string) => {
     if (!patientId) return;
+
+    const patientToDelete = patients.find(p => p.id === patientId);
+    if (patientToDelete) {
+        logActivity("Deleted Patient", `Deleted patient record for ${patientToDelete.name} (ID: ${patientToDelete.id})`);
+    }
+
     setPatients(patients.filter((p) => p.id !== patientId));
     toast({
       title: "Patient Deleted",
       description: "The patient record has been successfully removed.",
     });
     setPatientToDelete(null);
+  };
+
+  const handleExportCsv = () => {
+    logActivity("Exported Data", `Exported all patient data to CSV.`);
+    
+    const headers = [
+        "Patient ID", "Bill Number", "Name", "Age", "Phone", "Email", "Registration Date", 
+        "Diagnosis", "Treatment Plan", "Medicines", "Consultant Physio", 
+        "Sessions Required", "Total Bill", "Sessions Attended (Dates)", "Payments Made (Date: Amount)"
+    ];
+
+    const escapeCsvCell = (cellData: any) => {
+        const str = String(cellData ?? '');
+        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+            return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+    };
+
+    const rows = patients.map(patient => {
+        const sessionData = (patient.sessions || []).map(s => format(new Date(s.date), "yyyy-MM-dd")).join('; ');
+        const paymentData = (patient.payments || []).map(p => `${format(new Date(p.date), "yyyy-MM-dd")}:${p.amount}`).join('; ');
+        
+        const row = [
+            patient.id, patient.billNumber, patient.name, patient.age, patient.phone, patient.email, patient.registrationDate,
+            patient.diagnosis, patient.treatmentPlan, patient.medicines, patient.consultantPhysio,
+            patient.sessionsRequired, patient.totalBill,
+            sessionData, paymentData
+        ];
+        
+        return row.map(escapeCsvCell).join(',');
+    });
+    
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `patient_data_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+        title: "Export Successful",
+        description: "Patient data has been exported to CSV."
+    });
   };
 
   return (
@@ -283,6 +347,20 @@ export default function PatientsTable() {
           <CardTitle>Patient List</CardTitle>
         </CardHeader>
         <CardContent>
+            <div className="flex items-center justify-between gap-4 mb-4">
+                <div className="relative flex-grow">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                        placeholder="Search by name..." 
+                        value={searchTerm} 
+                        onChange={e => setSearchTerm(e.target.value)} 
+                        className="pl-10" 
+                    />
+                </div>
+                <Button onClick={handleExportCsv} variant="outline">
+                    <FileDown className="mr-2 h-4 w-4" /> Export CSV
+                </Button>
+            </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -293,8 +371,8 @@ export default function PatientsTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {patients.length > 0 ? (
-                patients.map((patient) => (
+              {filteredPatients.length > 0 ? (
+                filteredPatients.map((patient) => (
                   <TableRow key={patient.id}>
                     <TableCell className="font-medium">{patient.name}</TableCell>
                     <TableCell>

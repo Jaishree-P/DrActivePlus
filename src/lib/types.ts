@@ -74,3 +74,10 @@ export type Patient = {
   payments: PatientPayment[];
   billNumber: string;
 };
+
+export type ActivityLog = {
+  id: string;
+  timestamp: string;
+  action: string;
+  details: string;
+};

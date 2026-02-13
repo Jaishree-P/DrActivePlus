@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -31,6 +30,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { v4 as uuidv4 } from "uuid";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useActivityLog } from "@/hooks/use-activity-log";
 
 
 const formSchema = z.object({
@@ -65,8 +65,9 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
   );
   const { toast } = useToast();
   const router = useRouter();
+  const { logActivity } = useActivityLog();
 
-  const [patient, setPatient] = useState<Patient | undefined>();
+  const [patient, setPatient] = useState<Patient | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   const [sessionDate, setSessionDate] = useState<Date | undefined>(new Date());
@@ -115,7 +116,7 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
 
 
   useEffect(() => {
-    if (patients.length > 0) {
+    if (patients && patients.length > 0) {
       const currentPatient = patients.find((p) => p.id === params.id);
       if (currentPatient) {
         if (!currentPatient.payments) {
@@ -177,6 +178,7 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
     const updatedPatient = { ...patient, ...data };
     setPatient(updatedPatient);
     updatePatientInStorage(updatedPatient);
+    logActivity("Updated Patient", `Updated details for ${data.name} (ID: ${patient.id})`);
     toast({
       title: "Patient Updated",
       description: `${data.name}'s record has been successfully updated.`,
@@ -199,6 +201,7 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
 
     setPatient(updatedPatient);
     updatePatientInStorage(updatedPatient);
+    logActivity("Added Session", `Added new session for ${patient.name} on ${format(sessionDate, 'PPP')}`);
 
     toast({
       title: "Session Added",
@@ -209,11 +212,16 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
   const handleDeleteSession = (sessionId: string) => {
     if (!patient) return;
 
+    const sessionToDelete = patient.sessions.find(s => s.id === sessionId);
     const updatedSessions = patient.sessions.filter(s => s.id !== sessionId);
     const updatedPatient: Patient = { ...patient, sessions: updatedSessions };
 
     setPatient(updatedPatient);
     updatePatientInStorage(updatedPatient);
+    
+    if (sessionToDelete) {
+        logActivity("Deleted Session", `Deleted session from ${format(new Date(sessionToDelete.date), 'PPP')} for ${patient.name}`);
+    }
 
     toast({
       title: "Session Deleted",
@@ -237,6 +245,7 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
 
     setPatient(updatedPatient);
     updatePatientInStorage(updatedPatient);
+    logActivity("Added Payment", `Added payment of Rs. ${data.amount.toFixed(2)} for ${patient.name}`);
     
     toast({
       title: "Payment Added",
@@ -248,11 +257,16 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
   const handleDeletePayment = (paymentId: string) => {
       if (!patient) return;
       
+      const paymentToDelete = (patient.payments || []).find(p => p.id === paymentId);
       const updatedPayments = (patient.payments || []).filter(p => p.id !== paymentId);
       const updatedPatient = { ...patient, payments: updatedPayments };
 
       setPatient(updatedPatient);
       updatePatientInStorage(updatedPatient);
+      
+      if (paymentToDelete) {
+        logActivity("Deleted Payment", `Deleted payment of Rs. ${paymentToDelete.amount.toFixed(2)} from ${format(new Date(paymentToDelete.date), 'PPP')} for ${patient.name}`);
+      }
 
       toast({
           title: "Payment Deleted",
@@ -500,5 +514,3 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
     </div>
   );
 }
-
-    

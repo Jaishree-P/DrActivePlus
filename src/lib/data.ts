@@ -1,4 +1,4 @@
-import type { NavLink, Treatment, Testimonial, WhyChooseUsItem, DoctorProfile, BlogPost, Patient } from './types';
+import type { NavLink, Treatment, Testimonial, WhyChooseUsItem, DoctorProfile, BlogPost, Patient, ActivityLog } from './types';
 import { Activity, Award, Bone, HeartPulse, ShieldCheck, Stethoscope, Users, Zap } from 'lucide-react';
 
 export const navLinks: NavLink[] = [
@@ -123,7 +123,7 @@ export const defaultDoctorProfile: DoctorProfile = {
 
 export const defaultBlogPosts: BlogPost[] = [
     {
-        slug: 'understanding-laser-therapy',
+        slug: 'understanding-laser-therapy-1721151600898',
         title: 'The Power of Light: Understanding Laser Therapy',
         content: 'High-intensity laser therapy is a revolutionary treatment that uses focused light to stimulate tissue repair and provide pain relief. Discover how this non-invasive technology can help with a variety of musculoskeletal conditions, from acute injuries to chronic pain. Our clinic uses the latest laser equipment to ensure you get the best possible results...',
         author: 'Dr. Anil Kumar',
@@ -132,7 +132,7 @@ export const defaultBlogPosts: BlogPost[] = [
         imageHint: 'wellness article',
     },
     {
-        slug: '5-exercises-for-a-healthy-spine',
+        slug: '5-exercises-for-a-healthy-spine-1721151600898',
         title: '5 Simple Exercises for a Healthy Spine',
         content: 'Maintaining a healthy spine is crucial for overall well-being. Regular exercise can help strengthen your back, improve posture, and prevent pain. In this post, we share five simple yet effective exercises that you can do at home to keep your spine in top condition. Remember to consult with a physiotherapist before starting any new exercise regimen...',
         author: 'Dr. Anil Kumar',
@@ -141,7 +141,7 @@ export const defaultBlogPosts: BlogPost[] = [
         imageHint: 'physiotherapy exercise',
     },
     {
-        slug: 'recovering-from-a-sports-injury',
+        slug: 'recovering-from-a-sports-injury-1721151600898',
         title: 'Road to Recovery: A Guide to Sports Injury Rehab',
         content: 'Getting back in the game after a sports injury requires a structured and professional approach. Rehabilitation is not just about healing; it\'s about returning stronger and more resilient. This guide outlines the key phases of sports injury rehab, from initial assessment and pain management to strength training and sport-specific drills...',
         author: 'Dr. Anil Kumar',
@@ -152,3 +152,4 @@ export const defaultBlogPosts: BlogPost[] = [
 ];
 
 export const defaultPatients: Patient[] = [];
+export const defaultActivityLog: ActivityLog[] = [];
