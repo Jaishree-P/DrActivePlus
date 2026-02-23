@@ -28,8 +28,8 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 const PASSCODES = {
-  admin: "987654",
-  doctor: "123456",
+  admin: "219045",
+  doctor: "904567",
 };
 
 export default function LoginPage() {
