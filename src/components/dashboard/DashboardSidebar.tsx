@@ -6,23 +6,31 @@ import { Home, Users, UserCircle, LogOut, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/Logo";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 const sidebarNavLinks = [
-  { href: "/dashboard/patients", label: "Patients", icon: Users },
-  { href: "/dashboard/profile", label: "Doctor Profile", icon: UserCircle },
-  { href: "/dashboard/activity-log", label: "Activity Log", icon: History },
+  { href: "/dashboard/patients", label: "Patients", icon: Users, adminOnly: false },
+  { href: "/dashboard/profile", label: "Doctor Profile", icon: UserCircle, adminOnly: false },
+  { href: "/dashboard/activity-log", label: "Activity Log", icon: History, adminOnly: true },
 ];
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    // sessionStorage is only available in the browser
+    setUserRole(sessionStorage.getItem("user-role"));
+  }, []);
 
   const handleLogout = () => {
     sessionStorage.removeItem("doctor-auth");
+    sessionStorage.removeItem("user-role");
     router.push("/login");
   };
 
-  const NavLink = ({ href, label, icon: Icon }: (typeof sidebarNavLinks)[0]) => {
+  const NavLink = ({ href, label, icon: Icon }: { href: string; label: string; icon: React.ElementType; adminOnly?: boolean; }) => {
     const isActive = pathname.startsWith(href);
     return (
       <Link href={href}>
@@ -45,9 +53,12 @@ export default function DashboardSidebar() {
       </div>
 
       <nav className="flex flex-col gap-2 flex-grow">
-        {sidebarNavLinks.map((link) => (
-          <NavLink key={link.href} {...link} />
-        ))}
+        {sidebarNavLinks.map((link) => {
+          if (link.adminOnly && userRole !== 'admin') {
+            return null;
+          }
+          return <NavLink key={link.href} {...link} />;
+        })}
       </nav>
 
       <div className="mt-auto flex flex-col gap-2">

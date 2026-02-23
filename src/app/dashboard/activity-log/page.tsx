@@ -4,9 +4,44 @@ import { useActivityLog } from "@/hooks/use-activity-log";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ActivityLogPage() {
     const { logs } = useActivityLog();
+    const router = useRouter();
+    const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+
+    useEffect(() => {
+        const role = sessionStorage.getItem("user-role");
+        if (role !== "admin") {
+            // Redirect to a default dashboard page if not admin
+            router.replace("/dashboard");
+        } else {
+            setIsAuthorized(true);
+        }
+    }, [router]);
+
+    if (!isAuthorized) {
+        // Return a loading skeleton while checking for authorization and redirecting
+        return (
+            <div className="space-y-6">
+                <Skeleton className="h-9 w-48" />
+                <Card>
+                    <CardHeader>
+                        <Skeleton className="h-6 w-1/3 mb-2" />
+                        <Skeleton className="h-4 w-2/3" />
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
