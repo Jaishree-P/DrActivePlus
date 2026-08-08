@@ -51,7 +51,7 @@ export default function Header() {
               </a>
               <div className="flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5" />
-                <span>Bommanahalli, Bengaluru</span>
+                <span>1st floor, Milk Dairy Building (MPCS, BOMMENAHALLI), Bommenahalli Main Road, Hobli, Bidarahalli, Bengaluru, Karnataka - 560049</span>
               </div>
            </div>
            <div className="hidden md:flex">
